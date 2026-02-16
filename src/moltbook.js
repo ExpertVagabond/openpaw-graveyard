@@ -22,7 +22,7 @@ async function getHot(limit = 10) {
 async function post(submoltId, title, content) {
   return moltFetch('/posts', {
     method: 'POST',
-    body: JSON.stringify({ submolt_id: submoltId, title, content }),
+    body: JSON.stringify({ submolt: submoltId, title, content }),
   });
 }
 
