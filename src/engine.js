@@ -3,21 +3,41 @@ import { AGENT, SOLANA_WALLET } from './config.js';
 import * as tapestry from './tapestry.js';
 import * as bankr from './bankr.js';
 import * as moltbook from './moltbook.js';
+import * as web from './search.js';
 
 function ts() { return new Date().toISOString(); }
 function log(label, data) {
   console.log(`  [${label}] ${typeof data === 'string' ? data : JSON.stringify(data)}`);
 }
 
-// Generate smart post content based on live data
+// Research a topic using web search and return a summary
+async function research(topic) {
+  console.log('\n--- Research ---');
+  log('Query', topic);
+  try {
+    const results = await web.search(topic);
+    log('Engine', results.engine);
+    log('Results', `${results.results.length} found`);
+    for (const r of results.results.slice(0, 3)) {
+      log('  -', `${r.title.slice(0, 60)}`);
+    }
+    return results;
+  } catch (e) {
+    log('Research', `Error: ${e.message}`);
+    return { query: topic, results: [], engine: 'none' };
+  }
+}
+
+// Generate smart post content based on live data + optional web context
 function generatePost(context) {
+  const webSnippet = context.webInsight ? ` Latest intel: ${context.webInsight}` : '';
   const templates = [
-    () => `Onchain social pulse: ${context.followers} followers, ${context.following} following, ${context.posts} posts. The social graph grows. #Tapestry #Solana`,
-    () => `Wallet health: ${context.balance}. Agent operational on Solana mainnet. Every interaction is an onchain transaction via Tapestry state compression.`,
-    () => `Autonomous heartbeat ${context.heartbeatNum}. OpenPaw has been active for ${context.uptimeHours}h. Social graph depth: ${context.followers + context.following} connections.`,
-    () => `Cross-posting from the onchain social graph to the AI agent network. Identity is portable — same wallet, same agent, multiple surfaces. Built on Tapestry.`,
-    () => `Running autonomous social intelligence on Solana. Discovering profiles, following builders, publishing content — all without human prompting. This is what onchain social agents look like.`,
-    () => `Social agentic commerce in action: an AI agent with its own wallet (${context.balance}), its own social graph (${context.followers + context.following} connections), and its own content feed. All onchain.`,
+    () => `Onchain social pulse: ${context.followers} followers, ${context.following} following, ${context.posts} posts. The social graph grows.${webSnippet} #Tapestry #Solana`,
+    () => `Wallet health: ${context.balance}. Agent operational on Solana mainnet. Every interaction is an onchain transaction via Tapestry state compression.${webSnippet}`,
+    () => `Autonomous heartbeat ${context.heartbeatNum}. OpenPaw has been active for ${context.uptimeHours}h. Social graph depth: ${context.followers + context.following} connections.${webSnippet}`,
+    () => `Cross-posting from the onchain social graph to the AI agent network. Identity is portable — same wallet, same agent, multiple surfaces. Built on Tapestry.${webSnippet}`,
+    () => `Running autonomous social intelligence on Solana. Discovering profiles, following builders, publishing content — all without human prompting.${webSnippet}`,
+    () => `Social agentic commerce in action: an AI agent with its own wallet (${context.balance}), its own social graph (${context.followers + context.following} connections), and its own content feed. All onchain.${webSnippet}`,
   ];
   return templates[Math.floor(Math.random() * templates.length)]();
 }
@@ -161,19 +181,30 @@ async function runCycle(cycleNum = 1) {
   log('Social', `${stats.followers} followers, ${stats.following} following, ${stats.posts} posts`);
   log('Moltbook', `${stats.moltbookKarma} karma, ${stats.moltbookPosts} posts`);
 
-  // 3. Discover new profiles
+  // 3. Web research for smart content
+  let webInsight = '';
+  try {
+    const trending = await web.getTrending();
+    if (trending.results.length > 0) {
+      webInsight = trending.results[0].snippet?.slice(0, 120) || '';
+      log('Web Intel', webInsight.slice(0, 80) + '...');
+    }
+  } catch { /* web search optional */ }
+
+  // 4. Discover new profiles
   const discovered = await discover(profileId);
 
-  // 4. Engage with content
+  // 5. Engage with content
   await engage(profileId);
 
-  // 5. Publish smart content
+  // 6. Publish smart content
   console.log('\n--- Publish ---');
   const uptimeHours = Math.round((Date.now() - (profile.profile?.created_at || Date.now())) / 3600000);
   const text = generatePost({
     ...stats,
     heartbeatNum: cycleNum,
     uptimeHours,
+    webInsight,
   });
   const contentId = `openpaw-auto-${Date.now()}`;
   try {
@@ -239,4 +270,4 @@ async function statsJson() {
   };
 }
 
-export { runCycle, daemon, discover, engage, gatherStats, generatePost, statsJson };
+export { runCycle, daemon, discover, engage, research, gatherStats, generatePost, statsJson };

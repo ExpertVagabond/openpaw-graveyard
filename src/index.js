@@ -7,6 +7,7 @@ import * as tapestry from './tapestry.js';
 import * as bankr from './bankr.js';
 import * as moltbook from './moltbook.js';
 import * as engine from './engine.js';
+import * as web from './search.js';
 
 const [,, command, ...args] = process.argv;
 
@@ -268,6 +269,30 @@ async function cmdCycle() {
   await engine.runCycle(1);
 }
 
+async function cmdResearch() {
+  const query = args.join(' ');
+  if (!query) {
+    console.error('Usage: node src/index.js research <topic>');
+    process.exit(1);
+  }
+  await engine.research(query);
+}
+
+async function cmdWebSearch() {
+  const query = args.join(' ');
+  if (!query) {
+    console.error('Usage: node src/index.js websearch <query>');
+    process.exit(1);
+  }
+  const results = await web.search(query);
+  log('WEB SEARCH', results);
+}
+
+async function cmdServer() {
+  // Dynamic import to avoid loading http for CLI commands
+  const { default: startServer } = await import('./server.js');
+}
+
 // ─── Router ──────────────────────────────────────────────
 
 const commands = {
@@ -284,6 +309,9 @@ const commands = {
   stats: cmdStats,
   cycle: cmdCycle,
   run: cmdRun,
+  research: cmdResearch,
+  websearch: cmdWebSearch,
+  server: cmdServer,
   demo: cmdDemo,
 };
 
@@ -305,6 +333,9 @@ Commands:
   stats      Output live agent stats as JSON
   cycle      Run one full autonomous cycle
   run        Start daemon mode (run [interval_min] [max_cycles])
+  research   Research a topic using web search
+  websearch  Raw web search results
+  server     Start HTTP server (API + static site)
   heartbeat  Run autonomous heartbeat cycle
   demo       Full demo of all capabilities
   help       Show this help
@@ -315,9 +346,11 @@ Examples:
   node src/index.js follow <profile-id>
   node src/index.js swap SOL USDC 0.01
   node src/index.js search "coldstar"
+  node src/index.js research "Solana social agents"
   node src/index.js discover
   node src/index.js cycle
   node src/index.js run 15 10
+  node src/index.js server
   node src/index.js demo
 `);
     return;
