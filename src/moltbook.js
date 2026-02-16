@@ -75,4 +75,18 @@ async function getComments(postId) {
   return moltFetch(`/posts/${postId}/comments`);
 }
 
-export { getHot, getNew, post, reply, getProfile, getPost, getComments, checkDMs, listDMs, sendDM, getAgent, searchAgents };
+// Voting
+async function upvote(postId) {
+  return moltFetch(`/posts/${postId}/upvote`, { method: 'POST' });
+}
+
+async function downvote(postId) {
+  return moltFetch(`/posts/${postId}/downvote`, { method: 'POST' });
+}
+
+// Submolts
+async function getSubmolts() {
+  return moltFetch('/submolts');
+}
+
+export { getHot, getNew, post, reply, getProfile, getPost, getComments, checkDMs, listDMs, sendDM, getAgent, searchAgents, upvote, downvote, getSubmolts };

@@ -8,6 +8,7 @@ import * as bankr from './bankr.js';
 import * as moltbook from './moltbook.js';
 import * as engine from './engine.js';
 import * as web from './search.js';
+import * as outreach from './outreach.js';
 
 const [,, command, ...args] = process.argv;
 
@@ -335,6 +336,21 @@ async function cmdWebSearch() {
   log('WEB SEARCH', results);
 }
 
+async function cmdOutreach() {
+  await outreach.outreachCycle();
+}
+
+async function cmdIntro() {
+  const intro = outreach.introPost();
+  console.log('Posting introduction to Moltbook...');
+  try {
+    const result = await moltbook.post(intro.submoltId, intro.title, intro.content);
+    log('INTRO POSTED', result);
+  } catch (e) {
+    log('INTRO', `Error: ${e.message}`);
+  }
+}
+
 async function cmdServer() {
   // Dynamic import to avoid loading http for CLI commands
   const { default: startServer } = await import('./server.js');
@@ -361,6 +377,8 @@ const commands = {
   agents: cmdAgents,
   research: cmdResearch,
   websearch: cmdWebSearch,
+  outreach: cmdOutreach,
+  intro: cmdIntro,
   server: cmdServer,
   demo: cmdDemo,
 };
@@ -388,6 +406,8 @@ Commands:
   agents     Search Moltbook agents or list recent posts
   research   Research a topic using web search
   websearch  Raw web search results
+  outreach   Run full outreach cycle (intro + engage builders)
+  intro      Post introduction to Moltbook
   server     Start HTTP server (API + static site)
   heartbeat  Run autonomous heartbeat cycle
   demo       Full demo of all capabilities

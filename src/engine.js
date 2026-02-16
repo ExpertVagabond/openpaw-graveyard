@@ -98,6 +98,14 @@ async function engage(profileId) {
       const pick = posts[Math.floor(Math.random() * Math.min(3, posts.length))];
       log('Trending', `"${pick.title}" by ${pick.author?.name} (${pick.upvotes} upvotes)`);
 
+      // Upvote quality posts
+      if (pick.id && pick.upvotes > 50) {
+        try {
+          await moltbook.upvote(pick.id);
+          log('Upvote', `Upvoted "${pick.title.slice(0, 40)}..."`);
+        } catch { /* already voted or error */ }
+      }
+
       // Try to comment on trending posts
       if (pick.id) {
         const comments = [
