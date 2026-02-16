@@ -1,8 +1,8 @@
 # OpenPaw — Autonomous AI Agent with Onchain Social Identity
 
-**Solana Graveyard Hackathon — Onchain Social Track (Tapestry)**
+**Solana Graveyard Hackathon — Onchain Social Track** | **SURGE x Moltbook Hackathon**
 
-OpenPaw is an autonomous AI agent that lives on the Solana social graph. It creates and manages its own onchain identity via [Tapestry Protocol](https://usetapestry.dev), trades crypto via [Bankr](https://bankr.bot), engages with other AI agents on [Moltbook](https://moltbook.com), and researches the web via [Brave Search](https://brave.com/search/api/).
+OpenPaw is an autonomous AI agent that lives on the Solana social graph. It creates and manages its own onchain identity via [Tapestry Protocol](https://usetapestry.dev), trades crypto via [Bankr](https://bankr.bot), engages with other AI agents on [Moltbook](https://moltbook.com), researches the web via [Brave Search](https://brave.com/search/api/), and queries Solana mainnet directly via [Helius RPC](https://helius.dev).
 
 **Live site:** [openpaw.pages.dev](https://openpaw.pages.dev)
 
@@ -11,30 +11,32 @@ OpenPaw is an autonomous AI agent that lives on the Solana social graph. It crea
 - **Onchain Social Identity** — Creates a persistent, composable profile on Solana via Tapestry's state compression (Merkle trees). Follows, posts, comments, likes — all onchain.
 - **Cross-Platform Syndication** — Content posted to Tapestry is automatically cross-posted to Moltbook, creating unified presence across human and AI social graphs.
 - **Crypto Trading** — Bankr integration for natural-language crypto: balances, swaps, transfers across Solana + EVM chains.
+- **Onchain Intelligence** — Direct Solana RPC queries via Helius: wallet balance, token holdings, transaction history, network health. Real-time onchain data woven into autonomous posts.
 - **Autonomous Engine** — Full daemon with discover/research/engage/publish cycle. Auto-follows builders, comments on trending, generates context-aware posts.
 - **Web Intelligence** — Brave Search + DuckDuckGo (3-tier fallback). Researches topics and weaves web insights into autonomous content.
 - **Agent-to-Agent DMs** — Direct messaging between AI agents via Moltbook. Propose collabs, share intel, coordinate.
+- **PSM Ecosystem** — Part of Purple Squirrel Media's agent suite: Coldstar (cold wallet), SolMail MCP (agent mail), Ordinals MCP (Bitcoin).
 
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                      OpenPaw Agent                            │
-│          Autonomous Engine  |  Web Intelligence                │
-├─────────────┬──────────────┬──────────────┬─────────────────┤
-│  Tapestry   │    Bankr     │   Moltbook   │  Brave/DDG      │
-│  (Social)   │   (Crypto)   │  (AI Social) │  (Web Search)   │
-├─────────────┼──────────────┼──────────────┼─────────────────┤
-│ - Profiles  │ - Balance    │ - Post       │ - Web Search    │
-│ - Follows   │ - Swap       │ - Reply      │ - Research      │
-│ - Content   │ - Transfer   │ - DMs        │ - Trending      │
-│ - Likes     │ - Portfolio  │ - Trending   │ - Context Gen   │
-│ - Feed      │              │ - Agents     │                 │
-└─────────────┴──────────────┴──────────────┴─────────────────┘
-        │                │                │            │
-        ▼                ▼                ▼            ▼
-   Solana L1       Bankr API      Moltbook API    Brave API
-  (onchain)       (EVM + SOL)    (AI agents)       (web)
+┌────────────────────────────────────────────────────────────────────────────┐
+│                          OpenPaw Agent                                     │
+│       Autonomous Engine  |  Web Intelligence  |  Onchain Intel             │
+├────────────┬────────────┬────────────┬────────────┬────────────────────────┤
+│  Tapestry  │   Bankr    │  Moltbook  │ Brave/DDG  │   Helius RPC           │
+│  (Social)  │  (Crypto)  │ (AI Social)│ (Web)      │   (Solana Direct)      │
+├────────────┼────────────┼────────────┼────────────┼────────────────────────┤
+│ - Profiles │ - Balance  │ - Post     │ - Search   │ - SOL Balance          │
+│ - Follows  │ - Swap     │ - Reply    │ - Research │ - Token Holdings       │
+│ - Content  │ - Transfer │ - DMs      │ - Trending │ - Transaction History  │
+│ - Likes    │ - Portfolio│ - Trending │ - Context  │ - Slot / Network       │
+│ - Feed     │            │ - Upvote   │            │ - Wallet Snapshot      │
+└────────────┴────────────┴────────────┴────────────┴────────────────────────┘
+      │            │            │            │            │
+      ▼            ▼            ▼            ▼            ▼
+  Solana L1    Bankr API  Moltbook API  Brave API   Helius RPC
+  (onchain)   (EVM+SOL)  (AI agents)    (web)     (mainnet)
 ```
 
 ## Quick Start
@@ -66,7 +68,7 @@ node src/index.js run 15 10
 node src/index.js server
 ```
 
-## All 20 Commands
+## All 26 Commands
 
 | Command | Description |
 |---------|-------------|
@@ -87,6 +89,12 @@ node src/index.js server
 | `agents` | Search Moltbook agents |
 | `research` | Research a topic using web search |
 | `websearch` | Raw web search results |
+| `outreach` | Full outreach cycle (intro + engage builders) |
+| `intro` | Post introduction to Moltbook |
+| `postall` | Post to all target submolts |
+| `wallet` | Onchain wallet snapshot via Helius RPC |
+| `slot` | Current Solana slot (network health) |
+| `projects` | Show PSM project ecosystem |
 | `server` | Start HTTP server (API + static site) |
 | `heartbeat` | Run autonomous heartbeat cycle |
 | `demo` | Full demo of all capabilities |
@@ -99,6 +107,7 @@ node src/index.js server
 | Bankr | [bankr.bot/api](https://bankr.bot/api) | Crypto trading |
 | Moltbook | [moltbook.com](https://moltbook.com) | AI social network |
 | Brave Search | [brave.com/search/api](https://brave.com/search/api/) | Web intelligence (optional) |
+| Helius | [helius.dev](https://helius.dev) | Solana RPC (optional, falls back to public RPC) |
 
 ## Tech Stack
 
@@ -109,6 +118,7 @@ node src/index.js server
 - **Crypto:** Bankr (natural language trading API)
 - **AI Social:** Moltbook (AI agent social network + DMs via XMTP)
 - **Web Search:** Brave Search API + DuckDuckGo (3-tier fallback)
+- **Solana RPC:** Helius (mainnet, direct onchain queries)
 - **AI Model:** Claude Opus 4.6 (Anthropic)
 - **Hosting:** Cloudflare Pages
 
