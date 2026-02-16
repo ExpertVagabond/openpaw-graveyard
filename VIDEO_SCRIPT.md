@@ -1,88 +1,108 @@
 # OpenPaw — 3-Minute Video Walkthrough Script
 
 ## Recording Plan
-- **Format:** Screen recording with voiceover (or terminal + browser side-by-side)
+- **Format:** Screen recording with voiceover (terminal + browser side-by-side)
 - **Tool:** QuickTime screen record or OBS
-- **Length:** 2:30–3:00
+- **Length:** 2:30-3:00
 
 ---
 
-## [0:00–0:20] Intro (20s)
+## [0:00-0:15] Intro (15s)
 
-**Show:** README on GitHub or terminal splash screen
+**Show:** Website at openpaw.pages.dev or terminal splash
 
 **Say:**
-"OpenPaw is an autonomous AI agent that lives on Solana's onchain social graph. It uses Tapestry Protocol for its identity, Bankr for crypto trading, and Moltbook for engaging with other AI agents. Let me show you how it works."
+"OpenPaw is an autonomous AI agent that lives on Solana's onchain social graph. It uses Tapestry Protocol for identity, Bankr for crypto, Moltbook for engaging with other AI agents, and Brave Search for web intelligence. 20 commands, fully autonomous. Let me show you."
 
 ---
 
-## [0:20–0:50] Profile Creation (30s)
+## [0:15-0:40] Profile Creation (25s)
 
 **Run:** `node src/index.js profile`
 
-**Show:** Terminal output — Tapestry profile created, Bankr identity, Moltbook profile
+**Show:** Terminal output — Tapestry profile found, Bankr identity, Moltbook profile
 
 **Say:**
-"First, OpenPaw creates its onchain identity. This profile is stored directly on Solana L1 using Tapestry's state compression — the same Merkle tree tech as compressed NFTs. The profile is portable across any app built on Tapestry. It also verifies its Bankr crypto wallet and Moltbook AI social account."
+"First, OpenPaw's onchain identity. This profile is stored on Solana L1 using Tapestry's state compression — same Merkle tree tech as compressed NFTs. Portable across any Tapestry app. It also verifies with Bankr for crypto and Moltbook for AI social."
 
 ---
 
-## [0:50–1:20] Onchain Content (30s)
+## [0:40-1:05] Full Autonomous Cycle (25s)
 
-**Run:** `node src/index.js post "Hello from the Solana social graph — OpenPaw is alive"`
+**Run:** `node src/index.js cycle`
 
-**Show:** Terminal output — Tapestry content creation with onchain ID, cross-post attempt
+**Show:** Terminal output — full cycle with stats, web intel, engage, publish
 
 **Say:**
-"Now OpenPaw publishes content. This post gets written onchain to Tapestry with a unique content ID, author attribution, and timestamp. It also attempts to cross-post to Moltbook — the AI agent social network — so the content exists on both human and agent social graphs."
+"This is the core: a full autonomous cycle. The agent checks its identity, gathers stats across all platforms, researches a trending topic via Brave Search, engages with Moltbook content, then publishes a smart post onchain — all without human input. This runs as a daemon."
 
 ---
 
-## [1:20–1:50] Wallet & Trading (30s)
+## [1:05-1:25] Web Intelligence (20s)
+
+**Run:** `node src/index.js research "Solana social agents"`
+
+**Show:** Terminal output — Brave Search results
+
+**Say:**
+"Web intelligence powers the agent's content. Brave Search API with DuckDuckGo fallback. The agent researches topics and weaves insights into its posts. This is how an onchain social agent stays informed."
+
+---
+
+## [1:25-1:45] Wallet & Trading (20s)
 
 **Run:** `node src/index.js balance`
 
-**Show:** Terminal output — SOL balance, multi-chain wallet
+**Show:** Terminal output — SOL balance
 
 **Say:**
-"OpenPaw has a real crypto wallet with funded SOL. Through Bankr's natural language API, it can check balances across Solana, Ethereum, Base, and Polygon. It can also swap tokens and transfer funds — all through natural language prompts, not raw transaction building."
+"OpenPaw has a real crypto wallet. Through Bankr's natural language API, it checks balances, swaps tokens, and transfers funds across Solana, Ethereum, Base, and Polygon — all through conversation, not raw transaction building."
 
 ---
 
-## [1:50–2:20] Social Graph (30s)
+## [1:45-2:10] Agent Social Network (25s)
 
-**Run:** `node src/index.js feed` then `node src/index.js search "coldstar"`
+**Run:** `node src/index.js agents` then `node src/index.js dms`
 
-**Show:** Terminal output — Moltbook trending posts, Tapestry profile search
+**Show:** Terminal output — Moltbook feed, DM check
 
 **Say:**
-"The agent monitors its social graph — checking trending content on Moltbook and searching for profiles on Tapestry. As the social graph grows, OpenPaw can autonomously follow interesting wallets, comment on content, and like posts — all onchain."
+"On Moltbook, OpenPaw engages with other AI agents. It reads trending posts, discovers active agents, sends direct messages for collaboration, and comments on content. The agent exists on both human and AI social graphs simultaneously."
 
 ---
 
-## [2:20–2:50] Autonomous Heartbeat (30s)
+## [2:10-2:35] Daemon + Stats (25s)
 
-**Run:** `node src/index.js heartbeat`
+**Run:** `node src/index.js stats`
 
-**Show:** Terminal output — full heartbeat cycle
+**Show:** Terminal output — JSON stats
 
 **Say:**
-"The heartbeat command runs a full autonomous cycle: verify identity, check wallet health, publish a status update onchain, and report social stats. This is designed to run as a daemon — the agent maintains its own presence without human prompting. Every heartbeat is an onchain transaction."
+"The stats command outputs live agent state as JSON — ready for dashboards. The daemon mode runs cycles on a configurable interval. 20 commands total: profile, post, follow, discover, engage, DMs, search, research, stats, cycle, run, server, and more. Every social interaction is an onchain transaction via Tapestry."
 
 ---
 
-## [2:50–3:00] Closing (10s)
+## [2:35-2:50] Website (15s)
+
+**Show:** Browser at openpaw.pages.dev — scroll through the site
 
 **Say:**
-"OpenPaw demonstrates what onchain social agents look like on Solana. Built with Tapestry Protocol for the Graveyard Hackathon Onchain Social track. Built by Purple Squirrel Media. The code is open source on GitHub."
+"The website shows everything: architecture, live data, terminal demo, logo gallery. Built on Cloudflare Pages. PDF submission is downloadable."
+
+---
+
+## [2:50-3:00] Closing (10s)
+
+**Say:**
+"OpenPaw: 20 commands, 4 integrations, fully autonomous. Onchain social identity on Solana via Tapestry. Built by Purple Squirrel Media. Code is open source on GitHub."
 
 **Show:** GitHub repo URL
 
 ---
 
 ## Recording Tips
-1. Make terminal font large (18-20pt)
-2. Use a dark terminal theme for readability
-3. Pre-run commands once so Bankr jobs are faster (cached thread)
-4. Record in one take if possible — no fancy editing needed
-5. Keep it natural — hackathon judges want authentic, not polished
+1. Terminal font 18-20pt, dark theme
+2. Pre-run `profile` and `balance` once so Bankr thread is cached (faster)
+3. The `cycle` command takes ~50 seconds — you can speed it up in editing or narrate while waiting
+4. Keep it authentic — hackathon judges want real, not polished
+5. Show the website at the end for visual impact

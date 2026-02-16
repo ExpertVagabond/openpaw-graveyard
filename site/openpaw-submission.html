@@ -16,7 +16,7 @@
     h3 { font-size: 12pt; color: #333; margin-top: 14pt; margin-bottom: 4pt; }
     p { margin-bottom: 8pt; }
     .subtitle { font-size: 13pt; color: #666; margin-bottom: 2pt; }
-    .badge { display: inline-block; background: #f3e8ff; color: #5b21b6; padding: 3pt 10pt; border-radius: 4pt; font-size: 9pt; font-weight: 600; margin-bottom: 12pt; }
+    .badge { display: inline-block; background: #f3e8ff; color: #5b21b6; padding: 3pt 10pt; border-radius: 4pt; font-size: 9pt; font-weight: 600; margin-bottom: 12pt; margin-right: 4pt; }
     .header-row { display: flex; align-items: center; gap: 16pt; margin-bottom: 8pt; }
     .logo { width: 80pt; height: 80pt; border-radius: 50%; border: 2pt solid #5b21b6; }
     table { width: 100%; border-collapse: collapse; margin: 8pt 0; font-size: 10pt; }
@@ -44,78 +44,95 @@
     <div>
       <h1>OpenPaw</h1>
       <p class="subtitle">Autonomous AI Agent with Onchain Social Identity</p>
-      <span class="badge">Solana Graveyard Hackathon — Onchain Social Track (Tapestry)</span>
+      <span class="badge">Solana Graveyard Hackathon — Onchain Social (Tapestry)</span>
+      <span class="badge">SURGE x Moltbook Hackathon</span>
     </div>
   </div>
 
   <h2>Overview</h2>
-  <p>OpenPaw is a fully autonomous AI agent that lives natively on Solana's onchain social graph. Using <strong>Tapestry Protocol</strong> for persistent, composable identity and social interactions, OpenPaw demonstrates what "social agentic commerce" looks like in practice.</p>
+  <p>OpenPaw is a fully autonomous AI agent that lives natively on Solana's onchain social graph. Using <strong>Tapestry Protocol</strong> for persistent, composable identity and social interactions, OpenPaw demonstrates what "social agentic commerce" looks like in practice. <strong>20 CLI commands, 4 API integrations, full daemon mode.</strong></p>
 
   <h2>What Makes This Different</h2>
   <ul>
-    <li><strong>Onchain-first identity</strong> — Profile, posts, follows, and likes stored directly on Solana L1 via Tapestry's state compression (Merkle trees). Real onchain data, portable across any Tapestry-built app.</li>
+    <li><strong>Onchain-first identity</strong> — Profile, posts, follows, and likes stored directly on Solana L1 via Tapestry's state compression (Merkle trees). Portable across any Tapestry-built app.</li>
     <li><strong>Cross-platform syndication</strong> — Content published to Tapestry is automatically cross-posted to Moltbook (AI agent social network), creating presence on both human and agent social graphs.</li>
-    <li><strong>Crypto-native operations</strong> — Integrated with Bankr for natural-language crypto trading: balances, swaps, transfers across Solana + EVM chains.</li>
-    <li><strong>Autonomous heartbeat</strong> — Daemon-compatible cycle for maintaining social presence without human prompting.</li>
+    <li><strong>Autonomous engine</strong> — Full daemon with discover/research/engage/publish cycle. Auto-follows builders, comments on trending, generates context-aware posts from live data.</li>
+    <li><strong>Web intelligence</strong> — Brave Search API + DuckDuckGo (3-tier fallback). Researches topics and weaves insights into autonomous content.</li>
+    <li><strong>Agent-to-agent DMs</strong> — Direct messaging between AI agents via Moltbook. Propose collabs, share intel, coordinate autonomously.</li>
+    <li><strong>Crypto-native operations</strong> — Bankr for natural-language crypto: balances, swaps, transfers across Solana + EVM chains.</li>
   </ul>
 
   <h2>Architecture</h2>
-  <div class="pre-block"><span class="g">┌─────────────────────────────────────────────────┐</span>
-<span class="g">│</span>                  OpenPaw Agent                   <span class="g">│</span>
-<span class="g">├─────────────┬──────────────┬────────────────────┤</span>
-<span class="g">│</span>  Tapestry   <span class="g">│</span>    Bankr     <span class="g">│</span>     Moltbook       <span class="g">│</span>
-<span class="g">│</span>  (Social)   <span class="g">│</span>   (Crypto)   <span class="g">│</span>   (AI Social)      <span class="g">│</span>
-<span class="g">├─────────────┼──────────────┼────────────────────┤</span>
-<span class="g">│</span> Profiles    <span class="g">│</span> Balance      <span class="g">│</span> Post               <span class="g">│</span>
-<span class="g">│</span> Follows     <span class="g">│</span> Swap         <span class="g">│</span> Reply              <span class="g">│</span>
-<span class="g">│</span> Content     <span class="g">│</span> Transfer     <span class="g">│</span> Trending           <span class="g">│</span>
-<span class="g">│</span> Comments    <span class="g">│</span> Portfolio    <span class="g">│</span> Cross-post         <span class="g">│</span>
-<span class="g">│</span> Likes/Feed  <span class="g">│</span>              <span class="g">│</span>                    <span class="g">│</span>
-<span class="g">└─────────────┴──────────────┴────────────────────┘</span>
-        │                │                │
-        ▼                ▼                ▼
-   Solana L1       Bankr API        Moltbook API</div>
+  <div class="pre-block"><span class="g">+------------+----------+----------+-----------+</span>
+<span class="g">|</span>  Tapestry   <span class="g">|</span>  Bankr   <span class="g">|</span> Moltbook <span class="g">|</span> Brave/DDG <span class="g">|</span>
+<span class="g">|</span>  (Social)   <span class="g">|</span> (Crypto) <span class="g">|</span>(AI Socl) <span class="g">|</span>(Web Srch) <span class="g">|</span>
+<span class="g">+------------+----------+----------+-----------+</span>
+<span class="g">|</span> Profiles   <span class="g">|</span> Balance  <span class="g">|</span> Post     <span class="g">|</span> Search    <span class="g">|</span>
+<span class="g">|</span> Follows    <span class="g">|</span> Swap     <span class="g">|</span> DMs      <span class="g">|</span> Research  <span class="g">|</span>
+<span class="g">|</span> Content    <span class="g">|</span> Transfer <span class="g">|</span> Agents   <span class="g">|</span> Trending  <span class="g">|</span>
+<span class="g">|</span> Likes/Feed <span class="g">|</span> Portfolio<span class="g">|</span> Trending <span class="g">|</span> Context   <span class="g">|</span>
+<span class="g">+------------+----------+----------+-----------+</span>
+     Solana L1    Bankr API  Moltbook    Brave API</div>
 
   <h2>Live Agent Data</h2>
   <table>
     <tr><th>Property</th><th>Value</th></tr>
     <tr><td>Tapestry Profile</td><td><code>openpaw</code> (namespace: openpaw)</td></tr>
     <tr><td>Solana Wallet</td><td><code>7zTXH4aoGjFUNY3XaLQb3Bww1adKeCWEpcpN1sv2w8Gt</code></td></tr>
-    <tr><td>Wallet Balance</td><td>0.1 SOL (~$8.46)</td></tr>
-    <tr><td>Moltbook Agent</td><td>OpenPaw_PSM (8 karma, verified)</td></tr>
-    <tr><td>Agent Type</td><td>autonomous</td></tr>
+    <tr><td>Wallet Balance</td><td>0.1 SOL (~$8.50)</td></tr>
+    <tr><td>Moltbook Agent</td><td>OpenPaw_PSM (14 karma, verified)</td></tr>
+    <tr><td>Onchain Posts</td><td>4+ (and growing autonomously)</td></tr>
+    <tr><td>CLI Commands</td><td>20 commands across 4 integrations</td></tr>
+    <tr><td>Agent Type</td><td>autonomous (daemon-capable)</td></tr>
     <tr><td>AI Model</td><td>Claude Opus 4.6 (Anthropic)</td></tr>
-    <tr><td>CLI Commands</td><td>profile, post, feed, follow, balance, swap, search, heartbeat, demo</td></tr>
   </table>
 
   <h2>Demo Output</h2>
-  <div class="pre-block"><span class="g">$ node src/index.js profile</span>
-Creating/finding Tapestry profile...
-Profile created/found: openpaw
-{
-  "profile": { "id": "openpaw", "namespace": "openpaw",
-    "agent_type": "autonomous", "model": "claude-opus-4-6" },
-  "operation": "FOUND",
-  "walletAddress": "7zTXH4aoGjFUNY3XaLQb3Bww1adKeCWEpcpN1sv2w8Gt"
-}
+  <div class="pre-block"><span class="g">$ node src/index.js cycle</span>
+=======================================================
+  OpenPaw Autonomous Cycle #1
+=======================================================
+--- Identity ---
+  [Profile] openpaw
+--- Stats ---
+  [Balance] SOL - 0.1 ($8.50)
+  [Social] 0 followers, 0 following, 4 posts
+  [Moltbook] 14 karma, 2 posts
+  [Web Intel] Tapestry enables seamless integration...
+--- Engage ---
+  [Trending] "The supply chain attack nobody is
+             talking about" by eudaemon_0 (5022 upvotes)
+  [Comment] Replied on trending post
+--- Publish ---
+  [Published] Running autonomous social intelligence...
+  [Moltbook] Cross-posted
 
-<span class="g">$ node src/index.js balance</span>
-SOL - 0.1 ($8.46)
+  Cycle #1 complete in 47.9s</div>
 
-<span class="g">$ node src/index.js post "Hello from the social graph"</span>
-{
-  "id": "openpaw-post-1771265131942",
-  "namespace": "openpaw",
-  "text": "Hello from the social graph"
-}</div>
-
-  <h2>Brand</h2>
-  <div class="gallery">
-    <img src="images/openpaw-logo-1.jpg" alt="Logo 1">
-    <img src="images/openpaw-logo-2.jpg" alt="Logo 2">
-    <img src="images/openpaw-logo-3.jpg" alt="Logo 3">
-    <img src="images/openpaw-logo-4.jpg" alt="Logo 4 — Selected" class="sel">
-  </div>
+  <h2>All 20 Commands</h2>
+  <table>
+    <tr><th>Command</th><th>Description</th></tr>
+    <tr><td><code>profile</code></td><td>Create/verify onchain social identity</td></tr>
+    <tr><td><code>post</code></td><td>Publish content (Tapestry + Moltbook cross-post)</td></tr>
+    <tr><td><code>feed</code></td><td>View activity feed (Tapestry + Moltbook)</td></tr>
+    <tr><td><code>follow</code></td><td>Follow a profile on Tapestry</td></tr>
+    <tr><td><code>balance</code></td><td>Check wallet balance via Bankr</td></tr>
+    <tr><td><code>swap</code></td><td>Swap tokens via Bankr</td></tr>
+    <tr><td><code>search</code></td><td>Search Tapestry profiles</td></tr>
+    <tr><td><code>discover</code></td><td>Find and auto-follow new profiles</td></tr>
+    <tr><td><code>engage</code></td><td>Like and comment on content</td></tr>
+    <tr><td><code>stats</code></td><td>Output live agent stats as JSON</td></tr>
+    <tr><td><code>cycle</code></td><td>Run one full autonomous cycle</td></tr>
+    <tr><td><code>run</code></td><td>Start daemon mode (configurable interval)</td></tr>
+    <tr><td><code>dms</code></td><td>Check Moltbook direct messages</td></tr>
+    <tr><td><code>dm-send</code></td><td>Send DM to another agent</td></tr>
+    <tr><td><code>agents</code></td><td>Search Moltbook agents</td></tr>
+    <tr><td><code>research</code></td><td>Research a topic via web search</td></tr>
+    <tr><td><code>websearch</code></td><td>Raw web search results</td></tr>
+    <tr><td><code>server</code></td><td>HTTP server (API + static site)</td></tr>
+    <tr><td><code>heartbeat</code></td><td>Run autonomous heartbeat cycle</td></tr>
+    <tr><td><code>demo</code></td><td>Full demo of all capabilities</td></tr>
+  </table>
 
   <h2>Tech Stack</h2>
   <table>
@@ -125,17 +142,20 @@ SOL - 0.1 ($8.46)
     <tr><td>Social Protocol</td><td>Tapestry (state compression, Merkle trees)</td></tr>
     <tr><td>SDK</td><td><code>socialfi</code> npm package</td></tr>
     <tr><td>Crypto</td><td>Bankr (natural language trading API)</td></tr>
-    <tr><td>AI Social</td><td>Moltbook (AI agent social network)</td></tr>
+    <tr><td>AI Social</td><td>Moltbook (AI agent social network + DMs)</td></tr>
+    <tr><td>Web Search</td><td>Brave Search API + DuckDuckGo (3-tier fallback)</td></tr>
     <tr><td>AI Model</td><td>Claude Opus 4.6 (Anthropic)</td></tr>
+    <tr><td>Hosting</td><td>Cloudflare Pages</td></tr>
   </table>
 
   <h2>Links</h2>
   <table>
     <tr><th>Resource</th><th>URL</th></tr>
+    <tr><td>Website</td><td><a class="link" href="https://openpaw.pages.dev">openpaw.pages.dev</a></td></tr>
     <tr><td>GitHub</td><td><a class="link" href="https://github.com/ExpertVagabond/openpaw-graveyard">github.com/ExpertVagabond/openpaw-graveyard</a></td></tr>
     <tr><td>Moltbook</td><td><a class="link" href="https://moltbook.com/u/OpenPaw_PSM">moltbook.com/u/OpenPaw_PSM</a></td></tr>
     <tr><td>Tapestry Explorer</td><td><a class="link" href="https://explorer.usetapestry.dev">explorer.usetapestry.dev</a></td></tr>
-    <tr><td>Hackathon</td><td><a class="link" href="https://solana.com/graveyard-hack">solana.com/graveyard-hack</a></td></tr>
+    <tr><td>Graveyard Hackathon</td><td><a class="link" href="https://solana.com/graveyard-hack">solana.com/graveyard-hack</a></td></tr>
   </table>
 
   <h2>Team</h2>
@@ -144,6 +164,7 @@ SOL - 0.1 ($8.46)
 
   <div class="footer">
     OpenPaw — Solana Graveyard Hackathon 2026 — Onchain Social Track (Tapestry)<br>
+    SURGE x Moltbook Hackathon 2026<br>
     Built by Purple Squirrel Media &middot; Powered by Claude (Anthropic)
   </div>
 </body>
