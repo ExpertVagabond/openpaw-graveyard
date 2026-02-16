@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenPaw — Autonomous AI Agent on Solana</title>
+  <meta name="description" content="Autonomous AI agent with onchain social identity on Solana via Tapestry Protocol. Graveyard Hackathon — Onchain Social Track.">
+  <meta property="og:title" content="OpenPaw — Autonomous AI Agent on Solana">
+  <meta property="og:description" content="Onchain social identity, crypto trading, and AI social networking — all autonomous.">
+  <meta property="og:image" content="images/openpaw-logo-4.jpg">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="images/openpaw-logo-4.jpg">
+  <style>
+    :root {
+      --purple: #7c3aed;
+      --purple-light: #a78bfa;
+      --purple-dark: #5b21b6;
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface-2: #1c1c27;
+      --text: #e4e4e7;
+      --text-muted: #8b8b9e;
+      --accent: #22d3ee;
+      --green: #34d399;
+      --orange: #fb923c;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    a { color: var(--purple-light); text-decoration: none; }
+    a:hover { color: var(--accent); }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      background: radial-gradient(ellipse at 50% 30%, rgba(124,58,237,0.15) 0%, transparent 60%);
+      position: relative;
+    }
+    .hero-logo {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 3px solid var(--purple);
+      box-shadow: 0 0 60px rgba(124,58,237,0.3);
+      margin-bottom: 2rem;
+      object-fit: cover;
+    }
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--purple-light), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    .hero .tagline {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin-bottom: 2rem;
+    }
+    .hero .badge {
+      display: inline-block;
+      background: var(--surface-2);
+      border: 1px solid var(--purple);
+      border-radius: 999px;
+      padding: 0.4rem 1.2rem;
+      font-size: 0.85rem;
+      color: var(--purple-light);
+      margin-bottom: 2rem;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--purple);
+      color: white;
+      border: none;
+    }
+    .btn-primary:hover { background: var(--purple-dark); transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--text-muted);
+    }
+    .btn-outline:hover { border-color: var(--purple-light); color: var(--purple-light); }
+
+    /* Sections */
+    section { padding: 5rem 2rem; max-width: 1100px; margin: 0 auto; }
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: var(--purple-light);
+    }
+    h3 { font-size: 1.3rem; color: var(--text); margin-bottom: 0.5rem; }
+    p { color: var(--text-muted); margin-bottom: 1rem; }
+
+    /* Architecture */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    .arch-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-2);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: border-color 0.2s;
+    }
+    .arch-card:hover { border-color: var(--purple); }
+    .arch-card .icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
+    .arch-card h3 { font-size: 1.1rem; }
+    .arch-card p { font-size: 0.9rem; }
+
+    /* Live Data */
+    .live-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .live-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-2);
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .live-card .value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--green);
+      display: block;
+    }
+    .live-card .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Terminal Demo */
+    .terminal {
+      background: #1a1a2e;
+      border: 1px solid var(--surface-2);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 2rem;
+      font-size: 0.85rem;
+    }
+    .terminal-bar {
+      background: var(--surface);
+      padding: 0.6rem 1rem;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .terminal-dot.r { background: #ff5f57; }
+    .terminal-dot.y { background: #febc2e; }
+    .terminal-dot.g { background: #28c840; }
+    .terminal-body { padding: 1.25rem; overflow-x: auto; }
+    .terminal-body pre {
+      white-space: pre;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+    .terminal-body .cmd { color: var(--green); }
+    .terminal-body .out { color: var(--text); }
+    .terminal-body .dim { color: #555; }
+
+    /* Logo Gallery */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    .gallery img {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--surface-2);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .gallery img:hover { transform: scale(1.03); border-color: var(--purple); }
+    .gallery .selected {
+      border: 2px solid var(--purple);
+      box-shadow: 0 0 20px rgba(124,58,237,0.3);
+    }
+
+    /* Tech Stack */
+    .stack-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .stack-tag {
+      background: var(--surface);
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+
+    /* Links section */
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .link-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-2);
+      border-radius: 10px;
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: border-color 0.2s;
+    }
+    .link-card:hover { border-color: var(--purple); }
+    .link-card .link-icon { font-size: 1.5rem; }
+    .link-card .link-text { font-size: 0.9rem; }
+    .link-card .link-label { display: block; font-size: 0.75rem; color: var(--text-muted); }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 3rem 2rem;
+      border-top: 1px solid var(--surface-2);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 640px) {
+      .hero-logo { width: 120px; height: 120px; }
+      section { padding: 3rem 1.25rem; }
+      .gallery { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Hero -->
+  <div class="hero">
+    <img src="images/openpaw-logo-4.jpg" alt="OpenPaw Logo" class="hero-logo">
+    <div class="badge">Solana Graveyard Hackathon — Onchain Social Track</div>
+    <h1>OpenPaw</h1>
+    <p class="tagline">Autonomous AI agent with onchain social identity on Solana. Built on Tapestry Protocol.</p>
+    <div class="hero-buttons">
+      <a href="https://github.com/ExpertVagabond/openpaw-graveyard" class="btn btn-primary">GitHub Repo</a>
+      <a href="openpaw-submission.pdf" class="btn btn-outline" download>Download PDF</a>
+      <a href="#demo" class="btn btn-outline">See Demo</a>
+    </div>
+  </div>
+
+  <!-- What It Does -->
+  <section>
+    <h2>What OpenPaw Does</h2>
+    <p>OpenPaw is a fully autonomous AI agent that lives natively on Solana's onchain social graph. It creates its own persistent identity, publishes content, engages socially, and trades crypto — all without human prompting.</p>
+    <div class="arch-grid">
+      <div class="arch-card">
+        <span class="icon">&#x1f310;</span>
+        <h3>Onchain Social Identity</h3>
+        <p>Persistent, composable profile stored on Solana L1 via Tapestry's state compression. Portable across any app built on Tapestry.</p>
+      </div>
+      <div class="arch-card">
+        <span class="icon">&#x1f504;</span>
+        <h3>Cross-Platform Syndication</h3>
+        <p>Content posted to Tapestry is automatically cross-posted to Moltbook — the AI agent social network. Unified presence across human and AI social graphs.</p>
+      </div>
+      <div class="arch-card">
+        <span class="icon">&#x1f4b0;</span>
+        <h3>Crypto Trading</h3>
+        <p>Integrated with Bankr for natural-language crypto operations. Check balances, swap tokens, transfer funds across Solana, Ethereum, Base, and Polygon.</p>
+      </div>
+      <div class="arch-card">
+        <span class="icon">&#x1f916;</span>
+        <h3>Autonomous Heartbeat</h3>
+        <p>Daemon-compatible cycle that maintains social presence: publish updates, monitor social graph, check wallet health — all onchain, all automatic.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture -->
+  <section>
+    <h2>Architecture</h2>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot r"></span>
+        <span class="terminal-dot y"></span>
+        <span class="terminal-dot g"></span>
+      </div>
+      <div class="terminal-body">
+<pre>
+<span class="dim">┌─────────────────────────────────────────────────┐</span>
+<span class="dim">│</span>                  <span class="out">OpenPaw Agent</span>                   <span class="dim">│</span>
+<span class="dim">├─────────────┬──────────────┬────────────────────┤</span>
+<span class="dim">│</span>  <span class="cmd">Tapestry</span>   <span class="dim">│</span>    <span class="cmd">Bankr</span>     <span class="dim">│</span>     <span class="cmd">Moltbook</span>       <span class="dim">│</span>
+<span class="dim">│</span>  (Social)   <span class="dim">│</span>   (Crypto)   <span class="dim">│</span>   (AI Social)      <span class="dim">│</span>
+<span class="dim">├─────────────┼──────────────┼────────────────────┤</span>
+<span class="dim">│</span> - Profiles  <span class="dim">│</span> - Balance    <span class="dim">│</span> - Post             <span class="dim">│</span>
+<span class="dim">│</span> - Follows   <span class="dim">│</span> - Swap       <span class="dim">│</span> - Reply            <span class="dim">│</span>
+<span class="dim">│</span> - Content   <span class="dim">│</span> - Transfer   <span class="dim">│</span> - Trending         <span class="dim">│</span>
+<span class="dim">│</span> - Comments  <span class="dim">│</span> - Portfolio  <span class="dim">│</span> - Cross-post       <span class="dim">│</span>
+<span class="dim">│</span> - Likes     <span class="dim">│</span>              <span class="dim">│</span>                    <span class="dim">│</span>
+<span class="dim">│</span> - Feed      <span class="dim">│</span>              <span class="dim">│</span>                    <span class="dim">│</span>
+<span class="dim">└─────────────┴──────────────┴────────────────────┘</span>
+        <span class="dim">│</span>                <span class="dim">│</span>                <span class="dim">│</span>
+        <span class="dim">▼</span>                <span class="dim">▼</span>                <span class="dim">▼</span>
+   <span class="out">Solana L1</span>      <span class="out">Bankr API</span>       <span class="out">Moltbook API</span>
+  <span class="dim">(onchain)</span>      <span class="dim">(EVM + SOL)</span>     <span class="dim">(AI agents)</span>
+</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Live Data -->
+  <section>
+    <h2>Live Agent Data</h2>
+    <p>Real data from the deployed agent — all verified onchain or via API.</p>
+    <div class="live-grid">
+      <div class="live-card">
+        <span class="value">openpaw</span>
+        <span class="label">Tapestry Profile</span>
+      </div>
+      <div class="live-card">
+        <span class="value">0.1 SOL</span>
+        <span class="label">Wallet Balance</span>
+      </div>
+      <div class="live-card">
+        <span class="value">8</span>
+        <span class="label">Moltbook Karma</span>
+      </div>
+      <div class="live-card">
+        <span class="value">9</span>
+        <span class="label">CLI Commands</span>
+      </div>
+    </div>
+    <div class="live-grid" style="margin-top:1rem;">
+      <div class="live-card">
+        <span class="value" style="font-size:0.85rem;word-break:break-all;">7zTXH4ao...w8Gt</span>
+        <span class="label">Solana Wallet</span>
+      </div>
+      <div class="live-card">
+        <span class="value" style="font-size:0.85rem;">OpenPaw_PSM</span>
+        <span class="label">Moltbook Agent</span>
+      </div>
+      <div class="live-card">
+        <span class="value" style="font-size:0.85rem;">Claude Opus 4.6</span>
+        <span class="label">AI Model</span>
+      </div>
+      <div class="live-card">
+        <span class="value" style="font-size:0.85rem;">autonomous</span>
+        <span class="label">Agent Type</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo -->
+  <section id="demo">
+    <h2>Demo</h2>
+    <p>Full end-to-end demo output from the live agent.</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot r"></span>
+        <span class="terminal-dot y"></span>
+        <span class="terminal-dot g"></span>
+      </div>
+      <div class="terminal-body">
+<pre>
+<span class="cmd">$ node src/index.js profile</span>
+<span class="out">Creating/finding Tapestry profile...</span>
+<span class="out">Profile created/found: openpaw</span>
+
+<span class="dim">[TAPESTRY PROFILE]</span>
+<span class="out">{</span>
+<span class="out">  "profile": {</span>
+<span class="out">    "id": "openpaw",</span>
+<span class="out">    "namespace": "openpaw",</span>
+<span class="out">    "username": "openpaw",</span>
+<span class="out">    "bio": "Autonomous AI agent powered by Claude...",</span>
+<span class="out">    "agent_type": "autonomous",</span>
+<span class="out">    "model": "claude-opus-4-6"</span>
+<span class="out">  },</span>
+<span class="out">  "operation": "FOUND",</span>
+<span class="out">  "walletAddress": "7zTXH4aoGjFUNY3XaLQb3Bww1adKeCWEpcpN1sv2w8Gt"</span>
+<span class="out">}</span>
+
+<span class="cmd">$ node src/index.js balance</span>
+<span class="out">Checking wallet balance via Bankr...</span>
+<span class="out">  Job job_GSA7PQ7EZN4JEJUM submitted...</span>
+
+<span class="dim">[BALANCE]</span>
+<span class="out">SOL - 0.1 ($8.46)</span>
+
+<span class="cmd">$ node src/index.js post "Hello from the Solana social graph"</span>
+<span class="out">Publishing to Tapestry (onchain)...</span>
+
+<span class="dim">[TAPESTRY POST]</span>
+<span class="out">{</span>
+<span class="out">  "id": "openpaw-post-1771265131942",</span>
+<span class="out">  "created_at": 1771265137671,</span>
+<span class="out">  "namespace": "openpaw",</span>
+<span class="out">  "text": "Hello from the Solana social graph"</span>
+<span class="out">}</span>
+</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Logo Gallery -->
+  <section>
+    <h2>Brand</h2>
+    <p>OpenPaw logo concepts — generated with Gemini. Logo 4 (purple line-art paw) selected as primary.</p>
+    <div class="gallery">
+      <img src="images/openpaw-logo-1.jpg" alt="OpenPaw Logo Concept 1">
+      <img src="images/openpaw-logo-2.jpg" alt="OpenPaw Logo Concept 2">
+      <img src="images/openpaw-logo-3.jpg" alt="OpenPaw Logo Concept 3">
+      <img src="images/openpaw-logo-4.jpg" alt="OpenPaw Logo Concept 4 — Selected" class="selected">
+    </div>
+  </section>
+
+  <!-- Tech Stack -->
+  <section>
+    <h2>Tech Stack</h2>
+    <div class="stack-list">
+      <span class="stack-tag">Node.js 22</span>
+      <span class="stack-tag">Solana</span>
+      <span class="stack-tag">Tapestry Protocol</span>
+      <span class="stack-tag">socialfi SDK</span>
+      <span class="stack-tag">Bankr API</span>
+      <span class="stack-tag">Moltbook API</span>
+      <span class="stack-tag">Claude Opus 4.6</span>
+      <span class="stack-tag">ESM</span>
+      <span class="stack-tag">dotenv</span>
+      <span class="stack-tag">Cloudflare Pages</span>
+    </div>
+  </section>
+
+  <!-- Links -->
+  <section>
+    <h2>Links</h2>
+    <div class="links-grid">
+      <a href="https://github.com/ExpertVagabond/openpaw-graveyard" class="link-card">
+        <span class="link-icon">&#x1f4bb;</span>
+        <div>
+          <span class="link-text">GitHub Repository</span>
+          <span class="link-label">Source code &amp; README</span>
+        </div>
+      </a>
+      <a href="openpaw-submission.pdf" class="link-card" download>
+        <span class="link-icon">&#x1f4c4;</span>
+        <div>
+          <span class="link-text">Download PDF</span>
+          <span class="link-label">Hackathon submission document</span>
+        </div>
+      </a>
+      <a href="https://moltbook.com/u/OpenPaw_PSM" class="link-card">
+        <span class="link-icon">&#x1f99e;</span>
+        <div>
+          <span class="link-text">Moltbook Profile</span>
+          <span class="link-label">AI social network</span>
+        </div>
+      </a>
+      <a href="https://explorer.usetapestry.dev/" class="link-card">
+        <span class="link-icon">&#x1f50d;</span>
+        <div>
+          <span class="link-text">Tapestry Explorer</span>
+          <span class="link-label">View onchain social data</span>
+        </div>
+      </a>
+      <a href="https://solana.com/graveyard-hack" class="link-card">
+        <span class="link-icon">&#x1f3c6;</span>
+        <div>
+          <span class="link-text">Graveyard Hackathon</span>
+          <span class="link-label">Solana hackathon page</span>
+        </div>
+      </a>
+      <a href="https://usetapestry.dev" class="link-card">
+        <span class="link-icon">&#x1f9f5;</span>
+        <div>
+          <span class="link-text">Tapestry Protocol</span>
+          <span class="link-label">Solana's social graph</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>Built by <a href="https://purplesquirrelmedia.io">Purple Squirrel Media</a> &middot; <a href="https://x.com/expertvagabond">@expertvagabond</a></p>
+    <p style="margin-top:0.5rem;">Solana Graveyard Hackathon 2026 &middot; Onchain Social Track (Tapestry)</p>
+  </footer>
+</body>
+</html>

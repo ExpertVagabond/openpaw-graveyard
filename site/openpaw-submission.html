@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OpenPaw — Hackathon Submission</title>
+  <style>
+    @page { size: letter; margin: 1in 0.9in; }
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.5;
+      color: #1a1a1a;
+    }
+    h1 { font-size: 28pt; color: #5b21b6; margin-bottom: 4pt; }
+    h2 { font-size: 16pt; color: #5b21b6; margin-top: 24pt; margin-bottom: 8pt; border-bottom: 2px solid #e9d5ff; padding-bottom: 4pt; }
+    h3 { font-size: 12pt; color: #333; margin-top: 14pt; margin-bottom: 4pt; }
+    p { margin-bottom: 8pt; }
+    .subtitle { font-size: 13pt; color: #666; margin-bottom: 2pt; }
+    .badge { display: inline-block; background: #f3e8ff; color: #5b21b6; padding: 3pt 10pt; border-radius: 4pt; font-size: 9pt; font-weight: 600; margin-bottom: 12pt; }
+    .header-row { display: flex; align-items: center; gap: 16pt; margin-bottom: 8pt; }
+    .logo { width: 80pt; height: 80pt; border-radius: 50%; border: 2pt solid #5b21b6; }
+    table { width: 100%; border-collapse: collapse; margin: 8pt 0; font-size: 10pt; }
+    th { background: #f3e8ff; color: #5b21b6; text-align: left; padding: 6pt 8pt; font-weight: 600; }
+    td { padding: 5pt 8pt; border-bottom: 1px solid #e5e7eb; }
+    code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 9pt; background: #f5f5f5; padding: 1pt 4pt; border-radius: 3pt; }
+    .pre-block {
+      background: #1a1a2e; color: #e4e4e7; padding: 10pt; border-radius: 6pt;
+      font-family: 'SF Mono', monospace; font-size: 8.5pt; line-height: 1.4;
+      white-space: pre; margin: 8pt 0;
+    }
+    .pre-block .g { color: #34d399; }
+    .gallery { display: flex; gap: 8pt; margin: 8pt 0; }
+    .gallery img { width: 120pt; height: 120pt; border-radius: 8pt; border: 1px solid #ddd; object-fit: cover; }
+    .gallery .sel { border: 2pt solid #5b21b6; }
+    .link { color: #5b21b6; text-decoration: none; }
+    ul { margin: 4pt 0; padding-left: 16pt; }
+    li { margin-bottom: 3pt; }
+    .footer { margin-top: 24pt; padding-top: 8pt; border-top: 1px solid #ddd; font-size: 9pt; color: #888; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="header-row">
+    <img src="images/openpaw-logo-4.jpg" alt="OpenPaw" class="logo">
+    <div>
+      <h1>OpenPaw</h1>
+      <p class="subtitle">Autonomous AI Agent with Onchain Social Identity</p>
+      <span class="badge">Solana Graveyard Hackathon — Onchain Social Track (Tapestry)</span>
+    </div>
+  </div>
+
+  <h2>Overview</h2>
+  <p>OpenPaw is a fully autonomous AI agent that lives natively on Solana's onchain social graph. Using <strong>Tapestry Protocol</strong> for persistent, composable identity and social interactions, OpenPaw demonstrates what "social agentic commerce" looks like in practice.</p>
+
+  <h2>What Makes This Different</h2>
+  <ul>
+    <li><strong>Onchain-first identity</strong> — Profile, posts, follows, and likes stored directly on Solana L1 via Tapestry's state compression (Merkle trees). Real onchain data, portable across any Tapestry-built app.</li>
+    <li><strong>Cross-platform syndication</strong> — Content published to Tapestry is automatically cross-posted to Moltbook (AI agent social network), creating presence on both human and agent social graphs.</li>
+    <li><strong>Crypto-native operations</strong> — Integrated with Bankr for natural-language crypto trading: balances, swaps, transfers across Solana + EVM chains.</li>
+    <li><strong>Autonomous heartbeat</strong> — Daemon-compatible cycle for maintaining social presence without human prompting.</li>
+  </ul>
+
+  <h2>Architecture</h2>
+  <div class="pre-block"><span class="g">┌─────────────────────────────────────────────────┐</span>
+<span class="g">│</span>                  OpenPaw Agent                   <span class="g">│</span>
+<span class="g">├─────────────┬──────────────┬────────────────────┤</span>
+<span class="g">│</span>  Tapestry   <span class="g">│</span>    Bankr     <span class="g">│</span>     Moltbook       <span class="g">│</span>
+<span class="g">│</span>  (Social)   <span class="g">│</span>   (Crypto)   <span class="g">│</span>   (AI Social)      <span class="g">│</span>
+<span class="g">├─────────────┼──────────────┼────────────────────┤</span>
+<span class="g">│</span> Profiles    <span class="g">│</span> Balance      <span class="g">│</span> Post               <span class="g">│</span>
+<span class="g">│</span> Follows     <span class="g">│</span> Swap         <span class="g">│</span> Reply              <span class="g">│</span>
+<span class="g">│</span> Content     <span class="g">│</span> Transfer     <span class="g">│</span> Trending           <span class="g">│</span>
+<span class="g">│</span> Comments    <span class="g">│</span> Portfolio    <span class="g">│</span> Cross-post         <span class="g">│</span>
+<span class="g">│</span> Likes/Feed  <span class="g">│</span>              <span class="g">│</span>                    <span class="g">│</span>
+<span class="g">└─────────────┴──────────────┴────────────────────┘</span>
+        │                │                │
+        ▼                ▼                ▼
+   Solana L1       Bankr API        Moltbook API</div>
+
+  <h2>Live Agent Data</h2>
+  <table>
+    <tr><th>Property</th><th>Value</th></tr>
+    <tr><td>Tapestry Profile</td><td><code>openpaw</code> (namespace: openpaw)</td></tr>
+    <tr><td>Solana Wallet</td><td><code>7zTXH4aoGjFUNY3XaLQb3Bww1adKeCWEpcpN1sv2w8Gt</code></td></tr>
+    <tr><td>Wallet Balance</td><td>0.1 SOL (~$8.46)</td></tr>
+    <tr><td>Moltbook Agent</td><td>OpenPaw_PSM (8 karma, verified)</td></tr>
+    <tr><td>Agent Type</td><td>autonomous</td></tr>
+    <tr><td>AI Model</td><td>Claude Opus 4.6 (Anthropic)</td></tr>
+    <tr><td>CLI Commands</td><td>profile, post, feed, follow, balance, swap, search, heartbeat, demo</td></tr>
+  </table>
+
+  <h2>Demo Output</h2>
+  <div class="pre-block"><span class="g">$ node src/index.js profile</span>
+Creating/finding Tapestry profile...
+Profile created/found: openpaw
+{
+  "profile": { "id": "openpaw", "namespace": "openpaw",
+    "agent_type": "autonomous", "model": "claude-opus-4-6" },
+  "operation": "FOUND",
+  "walletAddress": "7zTXH4aoGjFUNY3XaLQb3Bww1adKeCWEpcpN1sv2w8Gt"
+}
+
+<span class="g">$ node src/index.js balance</span>
+SOL - 0.1 ($8.46)
+
+<span class="g">$ node src/index.js post "Hello from the social graph"</span>
+{
+  "id": "openpaw-post-1771265131942",
+  "namespace": "openpaw",
+  "text": "Hello from the social graph"
+}</div>
+
+  <h2>Brand</h2>
+  <div class="gallery">
+    <img src="images/openpaw-logo-1.jpg" alt="Logo 1">
+    <img src="images/openpaw-logo-2.jpg" alt="Logo 2">
+    <img src="images/openpaw-logo-3.jpg" alt="Logo 3">
+    <img src="images/openpaw-logo-4.jpg" alt="Logo 4 — Selected" class="sel">
+  </div>
+
+  <h2>Tech Stack</h2>
+  <table>
+    <tr><th>Layer</th><th>Technology</th></tr>
+    <tr><td>Runtime</td><td>Node.js 22 (ESM)</td></tr>
+    <tr><td>Blockchain</td><td>Solana</td></tr>
+    <tr><td>Social Protocol</td><td>Tapestry (state compression, Merkle trees)</td></tr>
+    <tr><td>SDK</td><td><code>socialfi</code> npm package</td></tr>
+    <tr><td>Crypto</td><td>Bankr (natural language trading API)</td></tr>
+    <tr><td>AI Social</td><td>Moltbook (AI agent social network)</td></tr>
+    <tr><td>AI Model</td><td>Claude Opus 4.6 (Anthropic)</td></tr>
+  </table>
+
+  <h2>Links</h2>
+  <table>
+    <tr><th>Resource</th><th>URL</th></tr>
+    <tr><td>GitHub</td><td><a class="link" href="https://github.com/ExpertVagabond/openpaw-graveyard">github.com/ExpertVagabond/openpaw-graveyard</a></td></tr>
+    <tr><td>Moltbook</td><td><a class="link" href="https://moltbook.com/u/OpenPaw_PSM">moltbook.com/u/OpenPaw_PSM</a></td></tr>
+    <tr><td>Tapestry Explorer</td><td><a class="link" href="https://explorer.usetapestry.dev">explorer.usetapestry.dev</a></td></tr>
+    <tr><td>Hackathon</td><td><a class="link" href="https://solana.com/graveyard-hack">solana.com/graveyard-hack</a></td></tr>
+  </table>
+
+  <h2>Team</h2>
+  <p><strong>Matthew Karsten</strong> — Founder, Purple Squirrel Media<br>
+  Solo builder &middot; <a class="link" href="https://x.com/expertvagabond">@expertvagabond</a> &middot; <a class="link" href="https://github.com/ExpertVagabond">GitHub</a></p>
+
+  <div class="footer">
+    OpenPaw — Solana Graveyard Hackathon 2026 — Onchain Social Track (Tapestry)<br>
+    Built by Purple Squirrel Media &middot; Powered by Claude (Anthropic)
+  </div>
+</body>
+</html>
