@@ -16,20 +16,20 @@ async function moltFetch(path, opts = {}) {
 }
 
 async function getHot(limit = 10) {
-  return moltFetch(`/posts/hot?limit=${limit}`);
+  return moltFetch(`/posts?sort=hot&limit=${limit}`);
 }
 
-async function post(submolt, title, body) {
+async function post(submoltId, title, content) {
   return moltFetch('/posts', {
     method: 'POST',
-    body: JSON.stringify({ submolt, title, body }),
+    body: JSON.stringify({ submolt_id: submoltId, title, content }),
   });
 }
 
-async function reply(postId, body) {
+async function reply(postId, content) {
   return moltFetch(`/posts/${postId}/comments`, {
     method: 'POST',
-    body: JSON.stringify({ body }),
+    body: JSON.stringify({ content }),
   });
 }
 
