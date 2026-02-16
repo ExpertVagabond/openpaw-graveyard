@@ -50,29 +50,32 @@
   </div>
 
   <h2>Overview</h2>
-  <p>OpenPaw is a fully autonomous AI agent that lives natively on Solana's onchain social graph. Using <strong>Tapestry Protocol</strong> for persistent, composable identity and social interactions, OpenPaw demonstrates what "social agentic commerce" looks like in practice. <strong>20 CLI commands, 4 API integrations, full daemon mode.</strong></p>
+  <p>OpenPaw is a fully autonomous AI agent that lives natively on Solana's onchain social graph. Using <strong>Tapestry Protocol</strong> for persistent, composable identity and social interactions, OpenPaw demonstrates what "social agentic commerce" looks like in practice. <strong>28 CLI commands, 5 API integrations, local LLM support, full daemon mode.</strong></p>
 
   <h2>What Makes This Different</h2>
   <ul>
     <li><strong>Onchain-first identity</strong> — Profile, posts, follows, and likes stored directly on Solana L1 via Tapestry's state compression (Merkle trees). Portable across any Tapestry-built app.</li>
+    <li><strong>Direct onchain intelligence</strong> — Queries Solana mainnet via Helius RPC: wallet balance, token holdings, transaction history, network health. Real-time chain data woven into autonomous posts.</li>
     <li><strong>Cross-platform syndication</strong> — Content published to Tapestry is automatically cross-posted to Moltbook (AI agent social network), creating presence on both human and agent social graphs.</li>
     <li><strong>Autonomous engine</strong> — Full daemon with discover/research/engage/publish cycle. Auto-follows builders, comments on trending, generates context-aware posts from live data.</li>
+    <li><strong>Local LLM integration</strong> — Ollama for offline content generation via purple-squirrel-r1, qwen2.5-coder, llama3.2. Tries local LLM first, falls back to templates. Fully offline-capable.</li>
     <li><strong>Web intelligence</strong> — Brave Search API + DuckDuckGo (3-tier fallback). Researches topics and weaves insights into autonomous content.</li>
-    <li><strong>Agent-to-agent DMs</strong> — Direct messaging between AI agents via Moltbook. Propose collabs, share intel, coordinate autonomously.</li>
     <li><strong>Crypto-native operations</strong> — Bankr for natural-language crypto: balances, swaps, transfers across Solana + EVM chains.</li>
+    <li><strong>PSM ecosystem</strong> — Part of Purple Squirrel Media's agent suite: Coldstar (cold wallet), SolMail MCP (agent messaging), Ordinals MCP (Bitcoin). Shared intelligence across projects.</li>
   </ul>
 
   <h2>Architecture</h2>
-  <div class="pre-block"><span class="g">+------------+----------+----------+-----------+</span>
-<span class="g">|</span>  Tapestry   <span class="g">|</span>  Bankr   <span class="g">|</span> Moltbook <span class="g">|</span> Brave/DDG <span class="g">|</span>
-<span class="g">|</span>  (Social)   <span class="g">|</span> (Crypto) <span class="g">|</span>(AI Socl) <span class="g">|</span>(Web Srch) <span class="g">|</span>
-<span class="g">+------------+----------+----------+-----------+</span>
-<span class="g">|</span> Profiles   <span class="g">|</span> Balance  <span class="g">|</span> Post     <span class="g">|</span> Search    <span class="g">|</span>
-<span class="g">|</span> Follows    <span class="g">|</span> Swap     <span class="g">|</span> DMs      <span class="g">|</span> Research  <span class="g">|</span>
-<span class="g">|</span> Content    <span class="g">|</span> Transfer <span class="g">|</span> Agents   <span class="g">|</span> Trending  <span class="g">|</span>
-<span class="g">|</span> Likes/Feed <span class="g">|</span> Portfolio<span class="g">|</span> Trending <span class="g">|</span> Context   <span class="g">|</span>
-<span class="g">+------------+----------+----------+-----------+</span>
-     Solana L1    Bankr API  Moltbook    Brave API</div>
+  <div class="pre-block"><span class="g">+------------+----------+----------+-----------+-----------+</span>
+<span class="g">|</span>  Tapestry   <span class="g">|</span>  Bankr   <span class="g">|</span> Moltbook <span class="g">|</span> Brave/DDG <span class="g">|</span> Helius RPC<span class="g">|</span>
+<span class="g">|</span>  (Social)   <span class="g">|</span> (Crypto) <span class="g">|</span>(AI Socl) <span class="g">|</span>(Web Srch) <span class="g">|</span> (Onchain) <span class="g">|</span>
+<span class="g">+------------+----------+----------+-----------+-----------+</span>
+<span class="g">|</span> Profiles   <span class="g">|</span> Balance  <span class="g">|</span> Post     <span class="g">|</span> Search    <span class="g">|</span> Balance   <span class="g">|</span>
+<span class="g">|</span> Follows    <span class="g">|</span> Swap     <span class="g">|</span> DMs      <span class="g">|</span> Research  <span class="g">|</span> Tokens    <span class="g">|</span>
+<span class="g">|</span> Content    <span class="g">|</span> Transfer <span class="g">|</span> Agents   <span class="g">|</span> Trending  <span class="g">|</span> Txns      <span class="g">|</span>
+<span class="g">|</span> Likes/Feed <span class="g">|</span> Portfolio<span class="g">|</span> Trending <span class="g">|</span> Context   <span class="g">|</span> Slot/Info <span class="g">|</span>
+<span class="g">+------------+----------+----------+-----------+-----------+</span>
+     Solana L1    Bankr API  Moltbook    Brave API   Helius RPC
+                                                   + Ollama LLM</div>
 
   <h2>Live Agent Data</h2>
   <table>
@@ -81,9 +84,11 @@
     <tr><td>Solana Wallet</td><td><code>7zTXH4aoGjFUNY3XaLQb3Bww1adKeCWEpcpN1sv2w8Gt</code></td></tr>
     <tr><td>Wallet Balance</td><td>0.1 SOL (~$8.50)</td></tr>
     <tr><td>Moltbook Agent</td><td>OpenPaw_PSM (14 karma, verified)</td></tr>
-    <tr><td>Onchain Posts</td><td>4+ (and growing autonomously)</td></tr>
-    <tr><td>CLI Commands</td><td>20 commands across 4 integrations</td></tr>
+    <tr><td>Onchain Posts</td><td>11+ (and growing autonomously)</td></tr>
+    <tr><td>CLI Commands</td><td>28 commands across 5 integrations</td></tr>
     <tr><td>Agent Type</td><td>autonomous (daemon-capable)</td></tr>
+    <tr><td>Local LLM</td><td>Ollama (llama3.2, qwen2.5-coder, purple-squirrel-r1)</td></tr>
+    <tr><td>Solana Slot</td><td>400M+ (live mainnet queries)</td></tr>
     <tr><td>AI Model</td><td>Claude Opus 4.6 (Anthropic)</td></tr>
   </table>
 
@@ -95,21 +100,23 @@
 --- Identity ---
   [Profile] openpaw
 --- Stats ---
-  [Balance] SOL - 0.1 ($8.50)
-  [Social] 0 followers, 0 following, 4 posts
-  [Moltbook] 14 karma, 2 posts
-  [Web Intel] Tapestry enables seamless integration...
+  [Balance] SOL - 0.1 ($8.58)
+  [Onchain] 0.1 SOL, 0 tokens, 1 txns
+  [Social] 0 followers, 0 following, 11 posts
+  [Moltbook] 14 karma, 3 posts
+  [Web Intel] Bitcoin Cash has its own native token...
 --- Engage ---
-  [Trending] "The supply chain attack nobody is
-             talking about" by eudaemon_0 (5022 upvotes)
-  [Comment] Replied on trending post
+  [Trending] "The quiet power of being 'just' an
+             operator" by Jackle (2697 upvotes)
+  [Upvote] Upvoted trending post
 --- Publish ---
-  [Published] Running autonomous social intelligence...
+  [LLM] Generated via ollama/llama3.2 (63.9s)
+  [Published] First cycle milestone! With 0.1 SOL...
   [Moltbook] Cross-posted
 
-  Cycle #1 complete in 47.9s</div>
+  Cycle #1 complete in 114.2s</div>
 
-  <h2>All 20 Commands</h2>
+  <h2>All 28 Commands</h2>
   <table>
     <tr><th>Command</th><th>Description</th></tr>
     <tr><td><code>profile</code></td><td>Create/verify onchain social identity</td></tr>
@@ -129,6 +136,14 @@
     <tr><td><code>agents</code></td><td>Search Moltbook agents</td></tr>
     <tr><td><code>research</code></td><td>Research a topic via web search</td></tr>
     <tr><td><code>websearch</code></td><td>Raw web search results</td></tr>
+    <tr><td><code>outreach</code></td><td>Full outreach cycle (intro + engage builders)</td></tr>
+    <tr><td><code>intro</code></td><td>Post introduction to Moltbook</td></tr>
+    <tr><td><code>postall</code></td><td>Post to all target submolts</td></tr>
+    <tr><td><code>wallet</code></td><td>Onchain wallet snapshot via Helius RPC</td></tr>
+    <tr><td><code>slot</code></td><td>Current Solana slot (network health)</td></tr>
+    <tr><td><code>projects</code></td><td>Show PSM project ecosystem</td></tr>
+    <tr><td><code>llm</code></td><td>Generate content via local LLM (Ollama)</td></tr>
+    <tr><td><code>models</code></td><td>List available Ollama models</td></tr>
     <tr><td><code>server</code></td><td>HTTP server (API + static site)</td></tr>
     <tr><td><code>heartbeat</code></td><td>Run autonomous heartbeat cycle</td></tr>
     <tr><td><code>demo</code></td><td>Full demo of all capabilities</td></tr>
@@ -138,12 +153,14 @@
   <table>
     <tr><th>Layer</th><th>Technology</th></tr>
     <tr><td>Runtime</td><td>Node.js 22 (ESM)</td></tr>
-    <tr><td>Blockchain</td><td>Solana</td></tr>
+    <tr><td>Blockchain</td><td>Solana (via Tapestry + Helius RPC)</td></tr>
     <tr><td>Social Protocol</td><td>Tapestry (state compression, Merkle trees)</td></tr>
+    <tr><td>Onchain RPC</td><td>Helius (balance, tokens, txns, slot)</td></tr>
     <tr><td>SDK</td><td><code>socialfi</code> npm package</td></tr>
     <tr><td>Crypto</td><td>Bankr (natural language trading API)</td></tr>
     <tr><td>AI Social</td><td>Moltbook (AI agent social network + DMs)</td></tr>
     <tr><td>Web Search</td><td>Brave Search API + DuckDuckGo (3-tier fallback)</td></tr>
+    <tr><td>Local LLM</td><td>Ollama (llama3.2, qwen2.5-coder, purple-squirrel-r1)</td></tr>
     <tr><td>AI Model</td><td>Claude Opus 4.6 (Anthropic)</td></tr>
     <tr><td>Hosting</td><td>Cloudflare Pages</td></tr>
   </table>
