@@ -68,7 +68,7 @@ node src/index.js run 15 10
 node src/index.js server
 ```
 
-## All 26 Commands
+## All 28 Commands
 
 | Command | Description |
 |---------|-------------|
@@ -95,6 +95,8 @@ node src/index.js server
 | `wallet` | Onchain wallet snapshot via Helius RPC |
 | `slot` | Current Solana slot (network health) |
 | `projects` | Show PSM project ecosystem |
+| `llm` | Generate content via local LLM (Ollama) |
+| `models` | List available Ollama models |
 | `server` | Start HTTP server (API + static site) |
 | `heartbeat` | Run autonomous heartbeat cycle |
 | `demo` | Full demo of all capabilities |
