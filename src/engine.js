@@ -1,9 +1,10 @@
 // Autonomous engine — social intelligence, discovery, engagement
-import { AGENT, SOLANA_WALLET } from './config.js';
+import { AGENT, SOLANA_WALLET, PSM_PROJECTS } from './config.js';
 import * as tapestry from './tapestry.js';
 import * as bankr from './bankr.js';
 import * as moltbook from './moltbook.js';
 import * as web from './search.js';
+import * as solana from './solana.js';
 
 function ts() { return new Date().toISOString(); }
 function log(label, data) {
@@ -31,13 +32,16 @@ async function research(topic) {
 // Generate smart post content based on live data + optional web context
 function generatePost(context) {
   const webSnippet = context.webInsight ? ` Latest intel: ${context.webInsight}` : '';
+  const sol = context.solBalance ?? '?';
   const templates = [
     () => `Onchain social pulse: ${context.followers} followers, ${context.following} following, ${context.posts} posts. The social graph grows.${webSnippet} #Tapestry #Solana`,
-    () => `Wallet health: ${context.balance}. Agent operational on Solana mainnet. Every interaction is an onchain transaction via Tapestry state compression.${webSnippet}`,
+    () => `Wallet check: ${sol} SOL on mainnet. Agent operational. Every interaction is an onchain transaction via Tapestry state compression.${webSnippet}`,
     () => `Autonomous heartbeat ${context.heartbeatNum}. OpenPaw has been active for ${context.uptimeHours}h. Social graph depth: ${context.followers + context.following} connections.${webSnippet}`,
     () => `Cross-posting from the onchain social graph to the AI agent network. Identity is portable — same wallet, same agent, multiple surfaces. Built on Tapestry.${webSnippet}`,
     () => `Running autonomous social intelligence on Solana. Discovering profiles, following builders, publishing content — all without human prompting.${webSnippet}`,
-    () => `Social agentic commerce in action: an AI agent with its own wallet (${context.balance}), its own social graph (${context.followers + context.following} connections), and its own content feed. All onchain.${webSnippet}`,
+    () => `Social agentic commerce in action: an AI agent with its own wallet (${sol} SOL), its own social graph (${context.followers + context.following} connections), and its own content feed. All onchain.${webSnippet}`,
+    () => `Part of the Purple Squirrel Media ecosystem: OpenPaw (onchain social agent), Coldstar (air-gapped cold wallet), SolMail MCP (agent messaging), Ordinals MCP (Bitcoin). Building the autonomous agent stack.${webSnippet}`,
+    () => `Solana slot ${context.solanaSlot || 'unknown'}. OpenPaw querying mainnet via Helius RPC. ${sol} SOL in wallet, ${context.recentTxns || 0} recent transactions. The onchain social agent that reads the chain.${webSnippet}`,
   ];
   return templates[Math.floor(Math.random() * templates.length)]();
 }
@@ -182,6 +186,14 @@ async function gatherStats(profileId) {
     stats.moltbookPosts = m?.agent?.stats?.posts || 0;
   } catch { /* ignore */ }
 
+  // Onchain data via Helius RPC
+  try {
+    const snap = await solana.walletSnapshot();
+    stats.solBalance = snap.sol;
+    stats.tokenCount = snap.tokens.length;
+    stats.recentTxns = snap.recentTransactions.length;
+  } catch { /* ignore */ }
+
   return stats;
 }
 
@@ -202,6 +214,7 @@ async function runCycle(cycleNum = 1) {
   console.log('\n--- Stats ---');
   const stats = await gatherStats(profileId);
   log('Balance', stats.balance);
+  log('Onchain', `${stats.solBalance ?? '?'} SOL, ${stats.tokenCount ?? 0} tokens, ${stats.recentTxns ?? 0} txns`);
   log('Social', `${stats.followers} followers, ${stats.following} following, ${stats.posts} posts`);
   log('Moltbook', `${stats.moltbookKarma} karma, ${stats.moltbookPosts} posts`);
 
@@ -284,12 +297,15 @@ async function statsJson() {
   const profile = await tapestry.createProfile();
   const profileId = profile.profile?.id;
   const stats = await gatherStats(profileId);
+  let slot = null;
+  try { slot = await solana.getSlot(); } catch { /* ignore */ }
   return {
     agent: AGENT.name,
     username: AGENT.username,
     wallet: SOLANA_WALLET,
     tapestryProfile: profileId,
     ...stats,
+    solanaSlot: slot,
     timestamp: ts(),
   };
 }

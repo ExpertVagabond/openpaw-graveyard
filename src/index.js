@@ -9,6 +9,7 @@ import * as moltbook from './moltbook.js';
 import * as engine from './engine.js';
 import * as web from './search.js';
 import * as outreach from './outreach.js';
+import * as solana from './solana.js';
 
 const [,, command, ...args] = process.argv;
 
@@ -351,9 +352,48 @@ async function cmdIntro() {
   }
 }
 
+async function cmdProjects() {
+  const { PSM_PROJECTS } = await import('./config.js');
+  console.log('\n=== Purple Squirrel Media — Project Ecosystem ===\n');
+  for (const [key, proj] of Object.entries(PSM_PROJECTS)) {
+    console.log(`  ${proj.name}`);
+    console.log(`    ${proj.desc}`);
+    if (proj.url) console.log(`    Web: ${proj.url}`);
+    console.log(`    Repo: ${proj.repo}`);
+    console.log(`    Status: ${proj.status}`);
+    console.log();
+  }
+}
+
+async function cmdPostAll() {
+  await outreach.postAll();
+}
+
 async function cmdServer() {
   // Dynamic import to avoid loading http for CLI commands
   const { default: startServer } = await import('./server.js');
+}
+
+async function cmdWallet() {
+  console.log('Fetching onchain wallet snapshot via Helius RPC...');
+  const snap = await solana.walletSnapshot();
+  log('WALLET', {
+    address: snap.address,
+    sol: `${snap.sol} SOL`,
+    tokens: snap.tokens.length > 0 ? snap.tokens : 'No SPL tokens',
+    recentTransactions: snap.recentTransactions.length,
+  });
+  if (snap.recentTransactions.length > 0) {
+    console.log('\nRecent transactions:');
+    for (const tx of snap.recentTransactions) {
+      console.log(`  ${tx.time || 'unknown'} — ${tx.signature.slice(0, 20)}... ${tx.err ? 'FAILED' : 'OK'}`);
+    }
+  }
+}
+
+async function cmdSlot() {
+  const slot = await solana.getSlot();
+  console.log(`Current Solana slot: ${slot.toLocaleString()}`);
 }
 
 // ─── Router ──────────────────────────────────────────────
@@ -381,6 +421,10 @@ const commands = {
   intro: cmdIntro,
   server: cmdServer,
   demo: cmdDemo,
+  wallet: cmdWallet,
+  slot: cmdSlot,
+  postall: cmdPostAll,
+  projects: cmdProjects,
 };
 
 async function main() {
@@ -408,6 +452,10 @@ Commands:
   websearch  Raw web search results
   outreach   Run full outreach cycle (intro + engage builders)
   intro      Post introduction to Moltbook
+  wallet     Onchain wallet snapshot (SOL + tokens + txns via Helius)
+  slot       Current Solana slot (network health)
+  postall    Post to all target submolts (intro + builds + crypto + agents)
+  projects   Show PSM project ecosystem
   server     Start HTTP server (API + static site)
   heartbeat  Run autonomous heartbeat cycle
   demo       Full demo of all capabilities
