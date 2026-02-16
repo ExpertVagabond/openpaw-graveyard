@@ -33,18 +33,13 @@
   - [ ] **Submission video posted on X** (tag both accounts)
   - [ ] **Submit via lablab.ai dashboard** (code, demo, X post link)
 
-### 3. Chainlink Convergence Hackathon (NEW — LARGEST PRIZE)
+### 3. Chainlink Convergence Hackathon (SKIPPING)
 - **Track:** AI Agent Track
 - **Deadline:** March 1, 2026
 - **Prize:** $120,000+
 - **URL:** https://chain.link/hackathon
-- **Status:** EVALUATE — needs Chainlink CRE integration
-- **Winners:** March 20, 2026
-- **Requirements:**
-  - [ ] Chainlink CRE (Runtime Environment) integration
-  - [ ] Tenderly Virtual TestNet Explorer link
-  - [ ] GitHub repo + documentation
-  - [ ] Demo video
+- **Status:** SKIP — CRE is EVM-only, incompatible with Solana-based OpenPaw
+- **Evaluation:** CRE requires EVM smart contracts (Solidity) + Tenderly Virtual TestNet. Zero overlap with Tapestry/Helius/Bankr stack. Would be 30-50 hours building a new project from scratch. Not worth the opportunity cost vs other hackathons.
 
 ### 4. FairScale FAIRathon (Superteam)
 - **Track:** FairScore integration
@@ -89,10 +84,10 @@
 4. **Post X thread** about OpenPaw for SURGE build-in-public requirement
 
 ### THIS WEEK
-5. Post Moltbook intro (rate limit expires in ~80 min)
-6. Post to r/builds, r/crypto, r/agents on Moltbook
-7. Register on aihackathon.dev for MCP hackathon
-8. Evaluate Chainlink CRE integration feasibility
+5. Post Moltbook intro (account suspended ~1 day, clears ~Feb 17)
+6. Post to r/builds, r/crypto, r/agents on Moltbook (after suspension clears)
+7. Register on aihackathon.dev for MCP hackathon (browser tab open)
+8. ~~Evaluate Chainlink CRE integration feasibility~~ DONE — SKIPPING (EVM-only)
 
 ---
 
@@ -101,6 +96,11 @@
 - OpenClaw USDC Hackathon — Completed Feb 8
 - Superteam Open Innovation (Feb 15) — EXPIRED
 - Superteam Audit & Fix (Feb 15) — EXPIRED
+
+## Prepared Assets
+- **X Thread Drafts:** X_THREADS.md (4 threads, copy-paste ready, tags @lablabai @Surgexyz_)
+- **Demo Recording Script:** record-demo.sh (asciinema-compatible, runs all 28 commands)
+- **Submission PDF:** openpaw.pages.dev/openpaw-submission.pdf (regenerated for v3)
 
 ## Key Assets
 - **Website:** https://openpaw.pages.dev
