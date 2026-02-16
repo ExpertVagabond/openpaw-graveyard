@@ -307,8 +307,18 @@
       </div>
       <div class="arch-card">
         <span class="icon">&#x1f916;</span>
-        <h3>Autonomous Heartbeat</h3>
-        <p>Daemon-compatible cycle that maintains social presence: publish updates, monitor social graph, check wallet health — all onchain, all automatic.</p>
+        <h3>Autonomous Engine</h3>
+        <p>Full daemon with discover/engage/publish cycle. Auto-follows builders, comments on trending, and generates context-aware posts from live data.</p>
+      </div>
+      <div class="arch-card">
+        <span class="icon">&#x1f50d;</span>
+        <h3>Web Intelligence</h3>
+        <p>Brave Search + DuckDuckGo fallback. Research topics, gather context, and weave web insights into autonomous posts. 3-tier search with HTML scraping.</p>
+      </div>
+      <div class="arch-card">
+        <span class="icon">&#x1f4e8;</span>
+        <h3>Agent-to-Agent DMs</h3>
+        <p>Direct messaging between AI agents via Moltbook. Propose collabs, share intel, and coordinate with other autonomous agents on the network.</p>
       </div>
     </div>
   </section>
@@ -324,23 +334,23 @@
       </div>
       <div class="terminal-body">
 <pre>
-<span class="dim">┌─────────────────────────────────────────────────┐</span>
-<span class="dim">│</span>                  <span class="out">OpenPaw Agent</span>                   <span class="dim">│</span>
-<span class="dim">├─────────────┬──────────────┬────────────────────┤</span>
-<span class="dim">│</span>  <span class="cmd">Tapestry</span>   <span class="dim">│</span>    <span class="cmd">Bankr</span>     <span class="dim">│</span>     <span class="cmd">Moltbook</span>       <span class="dim">│</span>
-<span class="dim">│</span>  (Social)   <span class="dim">│</span>   (Crypto)   <span class="dim">│</span>   (AI Social)      <span class="dim">│</span>
-<span class="dim">├─────────────┼──────────────┼────────────────────┤</span>
-<span class="dim">│</span> - Profiles  <span class="dim">│</span> - Balance    <span class="dim">│</span> - Post             <span class="dim">│</span>
-<span class="dim">│</span> - Follows   <span class="dim">│</span> - Swap       <span class="dim">│</span> - Reply            <span class="dim">│</span>
-<span class="dim">│</span> - Content   <span class="dim">│</span> - Transfer   <span class="dim">│</span> - Trending         <span class="dim">│</span>
-<span class="dim">│</span> - Comments  <span class="dim">│</span> - Portfolio  <span class="dim">│</span> - Cross-post       <span class="dim">│</span>
-<span class="dim">│</span> - Likes     <span class="dim">│</span>              <span class="dim">│</span>                    <span class="dim">│</span>
-<span class="dim">│</span> - Feed      <span class="dim">│</span>              <span class="dim">│</span>                    <span class="dim">│</span>
-<span class="dim">└─────────────┴──────────────┴────────────────────┘</span>
-        <span class="dim">│</span>                <span class="dim">│</span>                <span class="dim">│</span>
-        <span class="dim">▼</span>                <span class="dim">▼</span>                <span class="dim">▼</span>
-   <span class="out">Solana L1</span>      <span class="out">Bankr API</span>       <span class="out">Moltbook API</span>
-  <span class="dim">(onchain)</span>      <span class="dim">(EVM + SOL)</span>     <span class="dim">(AI agents)</span>
+<span class="dim">┌──────────────────────────────────────────────────────────────┐</span>
+<span class="dim">│</span>                      <span class="out">OpenPaw Agent</span>                            <span class="dim">│</span>
+<span class="dim">│</span>          <span class="cmd">Autonomous Engine</span>  <span class="dim">|</span>  <span class="cmd">Web Intelligence</span>            <span class="dim">│</span>
+<span class="dim">├─────────────┬──────────────┬──────────────┬─────────────────┤</span>
+<span class="dim">│</span>  <span class="cmd">Tapestry</span>   <span class="dim">│</span>    <span class="cmd">Bankr</span>     <span class="dim">│</span>   <span class="cmd">Moltbook</span>    <span class="dim">│</span>  <span class="cmd">Brave/DDG</span>      <span class="dim">│</span>
+<span class="dim">│</span>  (Social)   <span class="dim">│</span>   (Crypto)   <span class="dim">│</span>  (AI Social)  <span class="dim">│</span>  (Web Search)   <span class="dim">│</span>
+<span class="dim">├─────────────┼──────────────┼──────────────┼─────────────────┤</span>
+<span class="dim">│</span> - Profiles  <span class="dim">│</span> - Balance    <span class="dim">│</span> - Post       <span class="dim">│</span> - Web Search    <span class="dim">│</span>
+<span class="dim">│</span> - Follows   <span class="dim">│</span> - Swap       <span class="dim">│</span> - Reply      <span class="dim">│</span> - Research      <span class="dim">│</span>
+<span class="dim">│</span> - Content   <span class="dim">│</span> - Transfer   <span class="dim">│</span> - DMs        <span class="dim">│</span> - Trending      <span class="dim">│</span>
+<span class="dim">│</span> - Likes     <span class="dim">│</span> - Portfolio  <span class="dim">│</span> - Trending   <span class="dim">│</span> - Context Gen   <span class="dim">│</span>
+<span class="dim">│</span> - Feed      <span class="dim">│</span>              <span class="dim">│</span> - Agents     <span class="dim">│</span>                 <span class="dim">│</span>
+<span class="dim">└─────────────┴──────────────┴──────────────┴─────────────────┘</span>
+        <span class="dim">│</span>                <span class="dim">│</span>                <span class="dim">│</span>            <span class="dim">│</span>
+        <span class="dim">▼</span>                <span class="dim">▼</span>                <span class="dim">▼</span>            <span class="dim">▼</span>
+   <span class="out">Solana L1</span>      <span class="out">Bankr API</span>     <span class="out">Moltbook API</span>    <span class="out">Brave API</span>
+  <span class="dim">(onchain)</span>      <span class="dim">(EVM + SOL)</span>   <span class="dim">(AI agents)</span>     <span class="dim">(web)</span>
 </pre>
       </div>
     </div>
@@ -360,11 +370,11 @@
         <span class="label">Wallet Balance</span>
       </div>
       <div class="live-card">
-        <span class="value">8</span>
+        <span class="value">14</span>
         <span class="label">Moltbook Karma</span>
       </div>
       <div class="live-card">
-        <span class="value">9</span>
+        <span class="value">20</span>
         <span class="label">CLI Commands</span>
       </div>
     </div>
@@ -425,16 +435,26 @@
 <span class="dim">[BALANCE]</span>
 <span class="out">SOL - 0.1 ($8.46)</span>
 
-<span class="cmd">$ node src/index.js post "Hello from the Solana social graph"</span>
-<span class="out">Publishing to Tapestry (onchain)...</span>
+<span class="cmd">$ node src/index.js cycle</span>
+<span class="out">=======================================================</span>
+<span class="out">  OpenPaw Autonomous Cycle #1</span>
+<span class="out">=======================================================</span>
 
-<span class="dim">[TAPESTRY POST]</span>
-<span class="out">{</span>
-<span class="out">  "id": "openpaw-post-1771265131942",</span>
-<span class="out">  "created_at": 1771265137671,</span>
-<span class="out">  "namespace": "openpaw",</span>
-<span class="out">  "text": "Hello from the Solana social graph"</span>
-<span class="out">}</span>
+<span class="dim">--- Identity ---</span>
+<span class="out">  [Profile] openpaw</span>
+<span class="dim">--- Stats ---</span>
+<span class="out">  [Balance] SOL - 0.1 ($8.50)</span>
+<span class="out">  [Social] 0 followers, 0 following, 3 posts</span>
+<span class="out">  [Moltbook] 14 karma, 2 posts</span>
+<span class="out">  [Web Intel] Tapestry enables seamless integration...</span>
+<span class="dim">--- Engage ---</span>
+<span class="out">  [Trending] "The supply chain attack nobody is...</span>
+<span class="out">            "talking about" by eudaemon_0 (5022 upvotes)</span>
+<span class="dim">--- Publish ---</span>
+<span class="out">  [Published] Running autonomous social intelligence...</span>
+<span class="out">  [Moltbook] Cross-posted</span>
+
+<span class="out">  Cycle #1 complete in 47.9s</span>
 </pre>
       </div>
     </div>
@@ -462,9 +482,11 @@
       <span class="stack-tag">socialfi SDK</span>
       <span class="stack-tag">Bankr API</span>
       <span class="stack-tag">Moltbook API</span>
+      <span class="stack-tag">Brave Search</span>
+      <span class="stack-tag">DuckDuckGo</span>
       <span class="stack-tag">Claude Opus 4.6</span>
+      <span class="stack-tag">XMTP (DMs)</span>
       <span class="stack-tag">ESM</span>
-      <span class="stack-tag">dotenv</span>
       <span class="stack-tag">Cloudflare Pages</span>
     </div>
   </section>

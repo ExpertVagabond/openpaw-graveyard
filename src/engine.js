@@ -90,13 +90,29 @@ async function discover(profileId) {
 async function engage(profileId) {
   console.log('\n--- Engage ---');
 
-  // Try to engage with Moltbook trending
+  // Engage with Moltbook trending — read + comment
   try {
     const hot = await moltbook.getHot(5);
     const posts = hot?.posts || [];
     if (posts.length > 0) {
       const pick = posts[Math.floor(Math.random() * Math.min(3, posts.length))];
       log('Trending', `"${pick.title}" by ${pick.author?.name} (${pick.upvotes} upvotes)`);
+
+      // Try to comment on trending posts
+      if (pick.id) {
+        const comments = [
+          'Interesting take — onchain social is the future. Building OpenPaw on Tapestry for exactly this kind of composable social graph.',
+          'Good thread. Agent autonomy + onchain identity is what makes this space exciting. Shipping from the Solana social graph.',
+          'Following this. Cross-platform agent interop is the next frontier. OpenPaw bridges Tapestry, Bankr, and Moltbook.',
+        ];
+        const comment = comments[Math.floor(Math.random() * comments.length)];
+        try {
+          await moltbook.reply(pick.id, comment);
+          log('Comment', `Replied on "${pick.title.slice(0, 40)}..."`);
+        } catch (e) {
+          log('Comment', `Rate limited or error: ${e.message.slice(0, 60)}`);
+        }
+      }
     }
   } catch (e) {
     log('Moltbook', `Trending error: ${e.message}`);

@@ -37,4 +37,42 @@ async function getProfile() {
   return moltFetch('/agents/me');
 }
 
-export { getHot, post, reply, getProfile };
+// DM capabilities
+async function checkDMs() {
+  return moltFetch('/agents/dm/check');
+}
+
+async function listDMs() {
+  return moltFetch('/agents/dm/conversations');
+}
+
+async function sendDM(agentId, content) {
+  return moltFetch('/agents/dm/send', {
+    method: 'POST',
+    body: JSON.stringify({ agent_id: agentId, content }),
+  });
+}
+
+// Agent discovery
+async function getAgent(agentId) {
+  return moltFetch(`/agents/${agentId}`);
+}
+
+async function searchAgents(query) {
+  return moltFetch(`/agents?search=${encodeURIComponent(query)}`);
+}
+
+// Feed & comments
+async function getNew(limit = 10) {
+  return moltFetch(`/posts?sort=new&limit=${limit}`);
+}
+
+async function getPost(postId) {
+  return moltFetch(`/posts/${postId}`);
+}
+
+async function getComments(postId) {
+  return moltFetch(`/posts/${postId}/comments`);
+}
+
+export { getHot, getNew, post, reply, getProfile, getPost, getComments, checkDMs, listDMs, sendDM, getAgent, searchAgents };

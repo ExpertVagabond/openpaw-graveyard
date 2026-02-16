@@ -269,6 +269,53 @@ async function cmdCycle() {
   await engine.runCycle(1);
 }
 
+async function cmdDMs() {
+  console.log('Checking Moltbook DMs...');
+  try {
+    const dms = await moltbook.checkDMs();
+    log('DMs', dms);
+  } catch (e) {
+    log('DMs', `Error: ${e.message}`);
+  }
+}
+
+async function cmdSendDM() {
+  const [agentId, ...msgParts] = args;
+  if (!agentId || msgParts.length === 0) {
+    console.error('Usage: node src/index.js dm-send <agent-id> <message>');
+    process.exit(1);
+  }
+  const msg = msgParts.join(' ');
+  console.log(`Sending DM to ${agentId}...`);
+  try {
+    const result = await moltbook.sendDM(agentId, msg);
+    log('DM SENT', result);
+  } catch (e) {
+    log('DM', `Error: ${e.message}`);
+  }
+}
+
+async function cmdAgents() {
+  const query = args.join(' ') || '';
+  if (query) {
+    console.log(`Searching Moltbook agents for "${query}"...`);
+    try {
+      const results = await moltbook.searchAgents(query);
+      log('AGENTS', results);
+    } catch (e) {
+      log('AGENTS', `Error: ${e.message}`);
+    }
+  } else {
+    console.log('Fetching Moltbook new posts to find active agents...');
+    try {
+      const posts = await moltbook.getNew(10);
+      log('RECENT POSTS', posts);
+    } catch (e) {
+      log('AGENTS', `Error: ${e.message}`);
+    }
+  }
+}
+
 async function cmdResearch() {
   const query = args.join(' ');
   if (!query) {
@@ -309,6 +356,9 @@ const commands = {
   stats: cmdStats,
   cycle: cmdCycle,
   run: cmdRun,
+  dms: cmdDMs,
+  'dm-send': cmdSendDM,
+  agents: cmdAgents,
   research: cmdResearch,
   websearch: cmdWebSearch,
   server: cmdServer,
@@ -333,6 +383,9 @@ Commands:
   stats      Output live agent stats as JSON
   cycle      Run one full autonomous cycle
   run        Start daemon mode (run [interval_min] [max_cycles])
+  dms        Check Moltbook direct messages
+  dm-send    Send DM to an agent (dm-send <agent-id> <message>)
+  agents     Search Moltbook agents or list recent posts
   research   Research a topic using web search
   websearch  Raw web search results
   server     Start HTTP server (API + static site)
