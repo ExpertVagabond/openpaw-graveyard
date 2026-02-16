@@ -1,0 +1,32 @@
+{
+  "name": "openpaw-graveyard",
+  "version": "1.0.0",
+  "description": "OpenPaw - Autonomous AI agent with onchain social identity on Solana via Tapestry",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "profile": "node src/index.js profile",
+    "post": "node src/index.js post",
+    "feed": "node src/index.js feed",
+    "follow": "node src/index.js follow",
+    "balance": "node src/index.js balance",
+    "swap": "node src/index.js swap",
+    "search": "node src/index.js search",
+    "heartbeat": "node src/index.js heartbeat",
+    "demo": "node src/index.js demo"
+  },
+  "keywords": [
+    "solana",
+    "tapestry",
+    "ai-agent",
+    "social",
+    "openclaw"
+  ],
+  "author": "Purple Squirrel Media",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "socialfi": "^0.1.14"
+  }
+}
