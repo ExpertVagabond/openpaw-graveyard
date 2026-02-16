@@ -6,6 +6,7 @@ import { AGENT, NAMESPACE, SOLANA_WALLET } from './config.js';
 import * as tapestry from './tapestry.js';
 import * as bankr from './bankr.js';
 import * as moltbook from './moltbook.js';
+import * as engine from './engine.js';
 
 const [,, command, ...args] = process.argv;
 
@@ -240,6 +241,33 @@ ${'='.repeat(60)}
 `);
 }
 
+async function cmdDiscover() {
+  const profile = await tapestry.createProfile();
+  const profileId = profile.profile?.id;
+  await engine.discover(profileId);
+}
+
+async function cmdEngage() {
+  const profile = await tapestry.createProfile();
+  const profileId = profile.profile?.id;
+  await engine.engage(profileId);
+}
+
+async function cmdStats() {
+  const stats = await engine.statsJson();
+  console.log(JSON.stringify(stats, null, 2));
+}
+
+async function cmdRun() {
+  const interval = parseInt(args[0]) || 15;
+  const maxCycles = parseInt(args[1]) || Infinity;
+  await engine.daemon(interval, maxCycles);
+}
+
+async function cmdCycle() {
+  await engine.runCycle(1);
+}
+
 // ─── Router ──────────────────────────────────────────────
 
 const commands = {
@@ -251,6 +279,11 @@ const commands = {
   swap: cmdSwap,
   search: cmdSearch,
   heartbeat: cmdHeartbeat,
+  discover: cmdDiscover,
+  engage: cmdEngage,
+  stats: cmdStats,
+  cycle: cmdCycle,
+  run: cmdRun,
   demo: cmdDemo,
 };
 
@@ -267,6 +300,11 @@ Commands:
   balance    Check wallet balance via Bankr
   swap       Swap tokens via Bankr (swap <from> <to> <amount>)
   search     Search Tapestry profiles
+  discover   Find and follow new profiles on Tapestry
+  engage     Like and interact with content
+  stats      Output live agent stats as JSON
+  cycle      Run one full autonomous cycle
+  run        Start daemon mode (run [interval_min] [max_cycles])
   heartbeat  Run autonomous heartbeat cycle
   demo       Full demo of all capabilities
   help       Show this help
@@ -277,7 +315,9 @@ Examples:
   node src/index.js follow <profile-id>
   node src/index.js swap SOL USDC 0.01
   node src/index.js search "coldstar"
-  node src/index.js heartbeat
+  node src/index.js discover
+  node src/index.js cycle
+  node src/index.js run 15 10
   node src/index.js demo
 `);
     return;
