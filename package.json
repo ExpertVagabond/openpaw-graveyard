@@ -1,7 +1,7 @@
 {
   "name": "openpaw-graveyard",
-  "version": "2.0.0",
-  "description": "OpenPaw - Autonomous AI agent with onchain social identity on Solana via Tapestry",
+  "version": "3.0.0",
+  "description": "OpenPaw - Autonomous AI agent with onchain social identity on Solana via Tapestry, Helius RPC, local LLM",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
@@ -22,6 +22,14 @@
     "agents": "node src/index.js agents",
     "research": "node src/index.js research",
     "websearch": "node src/index.js websearch",
+    "outreach": "node src/index.js outreach",
+    "intro": "node src/index.js intro",
+    "postall": "node src/index.js postall",
+    "wallet": "node src/index.js wallet",
+    "slot": "node src/index.js slot",
+    "projects": "node src/index.js projects",
+    "llm": "node src/index.js llm",
+    "models": "node src/index.js models",
     "server": "node src/index.js server",
     "heartbeat": "node src/index.js heartbeat",
     "demo": "node src/index.js demo"
@@ -35,7 +43,10 @@
     "autonomous",
     "moltbook",
     "bankr",
-    "openclaw"
+    "helius",
+    "ollama",
+    "llm",
+    "brave-search"
   ],
   "author": "Purple Squirrel Media",
   "license": "MIT",
