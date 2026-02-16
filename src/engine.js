@@ -5,6 +5,7 @@ import * as bankr from './bankr.js';
 import * as moltbook from './moltbook.js';
 import * as web from './search.js';
 import * as solana from './solana.js';
+import * as llm from './llm.js';
 
 function ts() { return new Date().toISOString(); }
 function log(label, data) {
@@ -237,12 +238,18 @@ async function runCycle(cycleNum = 1) {
   // 6. Publish smart content
   console.log('\n--- Publish ---');
   const uptimeHours = Math.round((Date.now() - (profile.profile?.created_at || Date.now())) / 3600000);
-  const text = generatePost({
-    ...stats,
-    heartbeatNum: cycleNum,
-    uptimeHours,
-    webInsight,
-  });
+  const postContext = { ...stats, heartbeatNum: cycleNum, uptimeHours, webInsight };
+
+  // Try local LLM first, fallback to templates
+  let text;
+  const llmResult = await llm.generateSmartContent(postContext);
+  if (llmResult.text) {
+    text = llmResult.text;
+    log('LLM', `Generated via ${llmResult.source} (${llmResult.duration})`);
+  } else {
+    text = generatePost(postContext);
+    log('Template', 'Using template (Ollama unavailable)');
+  }
   const contentId = `openpaw-auto-${Date.now()}`;
   try {
     await tapestry.createContent(contentId, profileId, [

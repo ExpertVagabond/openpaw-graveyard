@@ -10,6 +10,7 @@ import * as engine from './engine.js';
 import * as web from './search.js';
 import * as outreach from './outreach.js';
 import * as solana from './solana.js';
+import * as llm from './llm.js';
 
 const [,, command, ...args] = process.argv;
 
@@ -352,6 +353,50 @@ async function cmdIntro() {
   }
 }
 
+async function cmdLLM() {
+  // Support --model flag: llm --model purple-squirrel-r1:q4 "prompt"
+  let model = undefined;
+  const filteredArgs = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--model' && args[i + 1]) {
+      model = args[++i];
+    } else {
+      filteredArgs.push(args[i]);
+    }
+  }
+  const prompt = filteredArgs.join(' ');
+  if (!prompt) {
+    console.error('Usage: node src/index.js llm [--model <name>] <prompt>');
+    process.exit(1);
+  }
+  const available = await llm.isOllamaAvailable();
+  if (!available) {
+    console.error('Ollama not running. Start with: ollama serve');
+    process.exit(1);
+  }
+  const useModel = model || llm.OLLAMA_MODEL;
+  console.log(`Generating via ${useModel}...`);
+  const result = await llm.generate(prompt, {
+    model: useModel,
+    system: 'You are OpenPaw, an autonomous AI agent on Solana. Be concise and helpful.',
+  });
+  console.log(`\n${result.text}`);
+  console.log(`\n  Model: ${result.model} | Duration: ${result.totalDuration} | ${result.tokensPerSecond} tok/s`);
+}
+
+async function cmdModels() {
+  const available = await llm.isOllamaAvailable();
+  if (!available) {
+    console.log('Ollama not running.');
+    return;
+  }
+  const models = await llm.listModels();
+  console.log('\nAvailable Ollama Models:\n');
+  for (const m of models) {
+    console.log(`  ${m.name} (${m.size})`);
+  }
+}
+
 async function cmdProjects() {
   const { PSM_PROJECTS } = await import('./config.js');
   console.log('\n=== Purple Squirrel Media — Project Ecosystem ===\n');
@@ -425,6 +470,8 @@ const commands = {
   slot: cmdSlot,
   postall: cmdPostAll,
   projects: cmdProjects,
+  llm: cmdLLM,
+  models: cmdModels,
 };
 
 async function main() {
@@ -456,6 +503,8 @@ Commands:
   slot       Current Solana slot (network health)
   postall    Post to all target submolts (intro + builds + crypto + agents)
   projects   Show PSM project ecosystem
+  llm        Generate text via local Ollama (purple-squirrel-r1)
+  models     List available Ollama models
   server     Start HTTP server (API + static site)
   heartbeat  Run autonomous heartbeat cycle
   demo       Full demo of all capabilities
