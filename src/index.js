@@ -446,8 +446,23 @@ async function cmdSlot() {
 
 async function cmdFlashScan() {
   console.log('Running flash loan arb scan...\n');
+  flashloans.enableExecution(true);
   const results = await flashloans.scanOnce();
   console.log(flashloans.formatScanReport(results));
+
+  // Execute profitable opportunities
+  for (const opp of results.opportunities) {
+    if (opp.profitBps >= 10) {
+      try {
+        const execResult = await flashloans.executeArbitrage(opp);
+        if (execResult?.success) {
+          console.log(`\n  [EXEC] SUCCESS: ${execResult.sig}`);
+        }
+      } catch (e) {
+        console.log(`\n  [EXEC] Error: ${e.message}`);
+      }
+    }
+  }
 
   // Post to Moltbook if notable spread
   if (results.bestBps >= 3) {

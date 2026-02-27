@@ -1,6 +1,18 @@
-// Flash loan arbitrage scanner for OpenPaw
-// Ports scanning logic from solana-flash-loan bot (TS) to plain JS ESM
-// Zero dependencies — uses only fetch() + BigInt (Node 22 built-ins)
+// Flash loan arbitrage scanner + executor for OpenPaw
+// Scans for arb opportunities, then executes via atomic flash loan transactions
+// Uses @solana/web3.js for transaction building, fetch for Jupiter/Raydium APIs
+
+import {
+  Connection, Keypair, PublicKey, TransactionInstruction,
+  TransactionMessage, VersionedTransaction, ComputeBudgetProgram,
+  SystemProgram, AddressLookupTableAccount,
+} from '@solana/web3.js';
+import {
+  getAssociatedTokenAddressSync,
+  createAssociatedTokenAccountIdempotentInstruction,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
+import fs from 'fs';
 
 // ─── Token Registry ──────────────────────────────────────
 
@@ -248,14 +260,18 @@ async function scanPair(pair, tokenA, tokenB) {
   const mintPrefix = tokenB.slice(0, 8);
   const borrowAmount = PAIR_BORROWS[mintPrefix] || DEFAULT_BORROW;
 
-  const quoteLeg1 = await getQuote(tokenA, tokenB, borrowAmount.toString(), SLIPPAGE_BPS, true);
+  // Use Jupiter-only quotes for consistent pricing (Raydium quotes can diverge)
+  const quoteLeg1 = await getJupiterQuote(tokenA, tokenB, borrowAmount.toString(), SLIPPAGE_BPS, true);
   const leg1Out = BigInt(quoteLeg1.outAmount);
   if (leg1Out === 0n) return null;
 
-  const quoteLeg2 = await getQuote(tokenB, tokenA, leg1Out.toString(), SLIPPAGE_BPS, true);
+  const quoteLeg2 = await getJupiterQuote(tokenB, tokenA, leg1Out.toString(), SLIPPAGE_BPS, true);
   const leg2Out = BigInt(quoteLeg2.outAmount);
 
-  return calculateProfit(pair, tokenA, tokenB, borrowAmount, leg1Out, leg2Out, POOL_FEE_BPS);
+  const result = calculateProfit(pair, tokenA, tokenB, borrowAmount, leg1Out, leg2Out, POOL_FEE_BPS);
+  result.quoteLeg1 = quoteLeg1;
+  result.quoteLeg2 = quoteLeg2;
+  return result;
 }
 
 // ─── Metrics ────────────────────────────────────────────
@@ -355,18 +371,350 @@ function formatScanReport(results) {
   return lines.join('\n');
 }
 
+// ─── Execution Engine ───────────────────────────────────
+
+const FLASH_LOAN_PROGRAM = new PublicKey('2chVPk6DV21qWuyUA2eHAzATdFSHM7ykv1fVX7Gv6nor');
+const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
+const BORROW_DISC = Buffer.from([64, 203, 133, 3, 2, 181, 8, 180]);
+const REPAY_DISC = Buffer.from([119, 239, 18, 45, 194, 107, 31, 238]);
+
+const HELIUS_RPC = process.env.HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com';
+const WALLET_PATH = process.env.FLASH_WALLET_PATH || (process.env.HOME + '/.config/solana/id.json');
+const EXECUTE_MIN_BPS = parseInt(process.env.FLASH_EXECUTE_MIN_BPS || '10');
+const PRIORITY_FEE_MICRO = parseInt(process.env.FLASH_PRIORITY_FEE || '25000');
+const COMPUTE_UNITS = 400_000;
+const JITO_TIP_LAMPORTS = 10000;
+const JITO_TIP_ACCT = new PublicKey('96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5');
+
+let _connection = null;
+let _keypair = null;
+let executionEnabled = false;
+
+function getConnection() {
+  if (!_connection) _connection = new Connection(HELIUS_RPC, 'confirmed');
+  return _connection;
+}
+
+function getKeypair() {
+  if (!_keypair) {
+    try {
+      const secret = JSON.parse(fs.readFileSync(WALLET_PATH, 'utf8'));
+      _keypair = Keypair.fromSecretKey(Uint8Array.from(secret));
+    } catch { return null; }
+  }
+  return _keypair;
+}
+
+function enableExecution(enable = true) {
+  executionEnabled = enable;
+  if (enable) {
+    const kp = getKeypair();
+    if (kp) console.log(`  [EXEC] Execution enabled, wallet: ${kp.publicKey.toBase58().slice(0, 8)}...`);
+    else console.log('  [EXEC] WARNING: No wallet found, execution disabled');
+  }
+}
+
+// Flash loan PDAs
+function derivePoolPda() {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('lending_pool'), USDC_MINT.toBuffer()],
+    FLASH_LOAN_PROGRAM
+  )[0];
+}
+
+function deriveVaultPda(poolPda) {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('pool_vault'), poolPda.toBuffer()],
+    FLASH_LOAN_PROGRAM
+  )[0];
+}
+
+function deriveReceiptPda(poolPda, borrower) {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('flash_loan_receipt'), poolPda.toBuffer(), borrower.toBuffer()],
+    FLASH_LOAN_PROGRAM
+  )[0];
+}
+
+function buildBorrowIx(borrower, borrowerTokenAccount, amount) {
+  const poolPda = derivePoolPda();
+  const vaultPda = deriveVaultPda(poolPda);
+  const receiptPda = deriveReceiptPda(poolPda, borrower);
+  const data = Buffer.alloc(16);
+  BORROW_DISC.copy(data, 0);
+  data.writeBigUInt64LE(BigInt(amount), 8);
+  return new TransactionInstruction({
+    programId: FLASH_LOAN_PROGRAM,
+    keys: [
+      { pubkey: poolPda, isSigner: false, isWritable: true },
+      { pubkey: receiptPda, isSigner: false, isWritable: true },
+      { pubkey: vaultPda, isSigner: false, isWritable: true },
+      { pubkey: borrowerTokenAccount, isSigner: false, isWritable: true },
+      { pubkey: borrower, isSigner: true, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+    ],
+    data,
+  });
+}
+
+function buildRepayIx(borrower, borrowerTokenAccount) {
+  const poolPda = derivePoolPda();
+  const vaultPda = deriveVaultPda(poolPda);
+  const receiptPda = deriveReceiptPda(poolPda, borrower);
+  return new TransactionInstruction({
+    programId: FLASH_LOAN_PROGRAM,
+    keys: [
+      { pubkey: poolPda, isSigner: false, isWritable: true },
+      { pubkey: receiptPda, isSigner: false, isWritable: true },
+      { pubkey: vaultPda, isSigner: false, isWritable: true },
+      { pubkey: borrowerTokenAccount, isSigner: false, isWritable: true },
+      { pubkey: borrower, isSigner: true, isWritable: true },
+      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+    ],
+    data: REPAY_DISC,
+  });
+}
+
+function deserializeInstruction(raw) {
+  return new TransactionInstruction({
+    programId: new PublicKey(raw.programId),
+    keys: raw.accounts.map(a => ({
+      pubkey: new PublicKey(a.pubkey),
+      isSigner: a.isSigner,
+      isWritable: a.isWritable,
+    })),
+    data: Buffer.from(raw.data, 'base64'),
+  });
+}
+
+async function getSwapInstructions(quote, userPubkey, wrapSol = true, useTokenLedger = false) {
+  await rateLimiter.acquire();
+  const body = {
+    quoteResponse: quote,
+    userPublicKey: userPubkey.toBase58(),
+    wrapAndUnwrapSol: wrapSol,
+    dynamicComputeUnitLimit: true,
+    prioritizationFeeLamports: 0,
+  };
+  if (useTokenLedger) body.useTokenLedger = true;
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (JUPITER_API_KEY) headers['x-api-key'] = JUPITER_API_KEY;
+  const res = await fetch(`${JUPITER_API_BASE}/swap-instructions`, {
+    method: 'POST', headers, body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Jupiter swap-instructions ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  if (!data.swapInstruction) throw new Error('No swapInstruction in response');
+
+  return {
+    tokenLedgerInstruction: data.tokenLedgerInstruction ? deserializeInstruction(data.tokenLedgerInstruction) : null,
+    setupInstructions: (data.setupInstructions || []).map(deserializeInstruction),
+    swapInstruction: deserializeInstruction(data.swapInstruction),
+    cleanupInstruction: data.cleanupInstruction ? deserializeInstruction(data.cleanupInstruction) : null,
+    addressLookupTableAddresses: data.addressLookupTableAddresses || [],
+  };
+}
+
+async function loadAddressLookupTables(connection, addresses) {
+  const unique = [...new Set(addresses)];
+  if (unique.length === 0) return [];
+  const tables = [];
+  for (let i = 0; i < unique.length; i += 10) {
+    const batch = unique.slice(i, i + 10);
+    const results = await Promise.all(
+      batch.map(async addr => {
+        const result = await connection.getAddressLookupTable(new PublicKey(addr));
+        return result.value;
+      })
+    );
+    for (const t of results) { if (t) tables.push(t); }
+  }
+  return tables;
+}
+
+async function executeArbitrage(opportunity) {
+  const keypair = getKeypair();
+  if (!keypair) { console.log('  [EXEC] No wallet — skipping'); return null; }
+  const connection = getConnection();
+
+  console.log(`  [EXEC] Executing ${opportunity.pair} — ${opportunity.profitBps}bps expected profit`);
+
+  // Re-quote fresh through Jupiter only (cached Raydium quotes can diverge)
+  const quoteLeg1 = await getJupiterQuote(
+    opportunity.tokenA, opportunity.tokenB,
+    opportunity.borrowAmount.toString(), SLIPPAGE_BPS, true
+  );
+  const leg1Out = BigInt(quoteLeg1.outAmount);
+  if (leg1Out === 0n) {
+    console.log('  [EXEC] No route for leg 1 — skipping');
+    return null;
+  }
+
+  const quoteLeg2 = await getJupiterQuote(
+    opportunity.tokenB, opportunity.tokenA,
+    leg1Out.toString(), SLIPPAGE_BPS, true
+  );
+  const freshLeg2Out = BigInt(quoteLeg2.outAmount);
+
+  // Re-check profitability with fresh quotes
+  const freshProfit = freshLeg2Out - opportunity.borrowAmount - opportunity.flashLoanFee - opportunity.solCosts;
+  const freshBps = Number((freshProfit * 10000n) / opportunity.borrowAmount);
+  console.log(`  [EXEC] Fresh Jupiter: leg1=${leg1Out} leg2=${freshLeg2Out} profit=${freshBps}bps`);
+  if (freshBps < 1) {
+    console.log(`  [EXEC] Not profitable after re-quote (${freshBps}bps) — skipping`);
+    metrics.executionSkipped = (metrics.executionSkipped || 0) + 1;
+    return null;
+  }
+
+  // Check if SOL is involved (disable wrapAndUnwrapSol to avoid SyncNative conflicts)
+  const involvesSol = opportunity.tokenA === SOL_MINT || opportunity.tokenB === SOL_MINT;
+
+  // Get swap instructions from Jupiter
+  const [swapIx1, swapIx2] = await Promise.all([
+    getSwapInstructions(quoteLeg1, keypair.publicKey, !involvesSol),
+    getSwapInstructions(quoteLeg2, keypair.publicKey, !involvesSol, true),
+  ]);
+
+  // Borrower's USDC ATA
+  const borrowerUsdcAta = getAssociatedTokenAddressSync(USDC_MINT, keypair.publicKey, false, TOKEN_PROGRAM_ID);
+
+  // Build atomic transaction: borrow → swap A→B → swap B→A → repay
+  const instructions = [
+    ComputeBudgetProgram.setComputeUnitLimit({ units: COMPUTE_UNITS }),
+    ComputeBudgetProgram.setComputeUnitPrice({ microLamports: PRIORITY_FEE_MICRO }),
+
+    // Ensure USDC ATA exists
+    createAssociatedTokenAccountIdempotentInstruction(
+      keypair.publicKey, borrowerUsdcAta, keypair.publicKey, USDC_MINT, TOKEN_PROGRAM_ID
+    ),
+
+    // Flash loan borrow
+    buildBorrowIx(keypair.publicKey, borrowerUsdcAta, opportunity.borrowAmount),
+
+    // Leg 1: tokenA → tokenB
+    ...swapIx1.setupInstructions,
+    swapIx1.swapInstruction,
+    ...(swapIx1.cleanupInstruction ? [swapIx1.cleanupInstruction] : []),
+
+    // Leg 2: tokenB → tokenA (with tokenLedger for actual leg 1 output)
+    ...(swapIx2.tokenLedgerInstruction ? [swapIx2.tokenLedgerInstruction] : []),
+    ...swapIx2.setupInstructions,
+    swapIx2.swapInstruction,
+    ...(swapIx2.cleanupInstruction ? [swapIx2.cleanupInstruction] : []),
+
+    // Flash loan repay
+    buildRepayIx(keypair.publicKey, borrowerUsdcAta),
+
+    // Jito tip (only paid on success)
+    SystemProgram.transfer({
+      fromPubkey: keypair.publicKey,
+      toPubkey: JITO_TIP_ACCT,
+      lamports: JITO_TIP_LAMPORTS,
+    }),
+  ];
+
+  // Load address lookup tables for V0 transaction
+  const allAltAddresses = [
+    ...swapIx1.addressLookupTableAddresses,
+    ...swapIx2.addressLookupTableAddresses,
+  ];
+  const lookupTables = await loadAddressLookupTables(connection, allAltAddresses);
+
+  // Build V0 transaction
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+  const messageV0 = new TransactionMessage({
+    payerKey: keypair.publicKey,
+    recentBlockhash: blockhash,
+    instructions,
+  }).compileToV0Message(lookupTables);
+
+  const tx = new VersionedTransaction(messageV0);
+  tx.sign([keypair]);
+
+  const txBytes = tx.serialize().length;
+  if (txBytes > 1232) {
+    console.log(`  [EXEC] TX too large: ${txBytes} bytes — skipping`);
+    return null;
+  }
+
+  // Simulate first
+  console.log(`  [EXEC] Simulating (${txBytes} bytes, ${instructions.length} ix)...`);
+  const sim = await connection.simulateTransaction(tx, { commitment: 'confirmed' });
+  if (sim.value.err) {
+    console.log(`  [EXEC] Simulation FAILED: ${JSON.stringify(sim.value.err)}`);
+    const logs = sim.value.logs || [];
+    for (const log of logs.slice(-3)) console.log(`    ${log}`);
+    metrics.executionFailed = (metrics.executionFailed || 0) + 1;
+    return null;
+  }
+
+  // Send via Jito for MEV protection
+  console.log(`  [EXEC] Simulation PASSED (${sim.value.unitsConsumed} CU). Sending via Jito...`);
+  let sig;
+  try {
+    const jitoRes = await fetch('https://mainnet.block-engine.jito.wtf/api/v1/transactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0', id: 1, method: 'sendTransaction',
+        params: [Buffer.from(tx.serialize()).toString('base64'), { encoding: 'base64' }],
+      }),
+    });
+    const jitoData = await jitoRes.json();
+    sig = jitoData.result;
+    if (!sig) throw new Error(jitoData.error?.message || 'No signature from Jito');
+  } catch (jitoErr) {
+    // Fallback to RPC
+    console.log(`  [EXEC] Jito failed (${jitoErr.message}), sending via RPC...`);
+    sig = await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 2 });
+  }
+
+  console.log(`  [EXEC] TX: ${sig}`);
+  console.log(`  [EXEC] https://solscan.io/tx/${sig}`);
+
+  // Confirm
+  const conf = await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
+  if (conf.value.err) {
+    console.log(`  [EXEC] TX FAILED on-chain: ${JSON.stringify(conf.value.err)}`);
+    metrics.executionFailed = (metrics.executionFailed || 0) + 1;
+    return { sig, success: false };
+  }
+
+  const profitStr = formatTokenAmount(freshProfit > 0n ? freshProfit : 0n, 6);
+  console.log(`  [EXEC] ARB SUCCESS! ${opportunity.pair} +${freshBps}bps ($${profitStr} profit)`);
+  metrics.executionSuccess = (metrics.executionSuccess || 0) + 1;
+  metrics.totalProfit = (metrics.totalProfit || 0n) + freshProfit;
+  return { sig, success: true, profitBps: freshBps, profitUsd: profitStr };
+}
+
 // ─── Daemon ─────────────────────────────────────────────
 
 let running = false;
 
 async function daemon(intervalSec = 30) {
   running = true;
-  console.log(`Flash loan scanner daemon starting — interval: ${intervalSec}s`);
+  enableExecution(true);
+  console.log(`Flash loan scanner+executor daemon — interval: ${intervalSec}s, min execute: ${EXECUTE_MIN_BPS}bps`);
 
   while (running) {
     try {
       const result = await scanOnce();
       console.log(`[SCAN #${metrics.scanCycles}] ${result.pairsScanned} pairs in ${result.elapsed}s | best: ${result.bestPair} ${result.bestBps}bps | opps: ${result.opportunities.length}`);
+
+      // Execute profitable opportunities
+      if (executionEnabled) {
+        for (const opp of result.opportunities) {
+          if (opp.profitBps >= EXECUTE_MIN_BPS) {
+            try {
+              await executeArbitrage(opp);
+            } catch (execErr) {
+              console.error(`  [EXEC] Error: ${execErr.message}`);
+            }
+          }
+        }
+      }
     } catch (err) {
       console.error(`  Scan error: ${err.message}`);
     }
@@ -391,6 +739,11 @@ function getStats() {
     bestProfitBps: metrics.bestProfitBps,
     bestProfitPair: metrics.bestProfitPair,
     lastScanTime: metrics.lastScanTime,
+    executionEnabled,
+    executionSuccess: metrics.executionSuccess || 0,
+    executionFailed: metrics.executionFailed || 0,
+    executionSkipped: metrics.executionSkipped || 0,
+    totalProfit: (metrics.totalProfit || 0n).toString(),
     recentOpportunities: metrics.history.slice(-10).map(o => ({
       pair: o.pair,
       profitBps: o.profitBps,
@@ -411,6 +764,8 @@ export {
   getStats,
   formatScanPost,
   formatScanReport,
+  executeArbitrage,
+  enableExecution,
   DEFAULT_PAIRS,
   HOT_PAIRS,
   WELL_KNOWN_MINTS,
