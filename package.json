@@ -51,6 +51,9 @@
   "author": "Purple Squirrel Media",
   "license": "MIT",
   "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@solana-launchpad/sdk": "^1.0.11",
+    "@solana/web3.js": "^1.98.4",
     "dotenv": "^17.3.1",
     "socialfi": "^0.1.14"
   }

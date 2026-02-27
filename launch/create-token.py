@@ -18,9 +18,18 @@ import json
 import sys
 import os
 import time
-import base64
 import requests
 from pathlib import Path
+
+# Load .env from project root
+ENV_PATH = Path(__file__).parent.parent / ".env"
+if ENV_PATH.exists():
+    with open(ENV_PATH) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip())
 
 # PumpPortal endpoints
 PUMPPORTAL_IPFS = "https://pump.fun/api/ipfs"
@@ -88,6 +97,9 @@ def create_token(keypair, metadata_uri: str, dev_buy_sol: float = 0.05):
     """Create token on pump.fun via PumpPortal local transaction API."""
     from solders.keypair import Keypair as SoldersKeypair
     from solders.transaction import VersionedTransaction
+    from solders.commitment_config import CommitmentLevel
+    from solders.rpc.requests import SendVersionedTransaction
+    from solders.rpc.config import RpcSendTransactionConfig
 
     mint_keypair = SoldersKeypair()
     mint_address = str(mint_keypair.pubkey())
@@ -96,44 +108,64 @@ def create_token(keypair, metadata_uri: str, dev_buy_sol: float = 0.05):
     print(f"Creator wallet: {keypair.pubkey()}")
     print(f"Dev buy: {dev_buy_sol} SOL")
 
+    # Use Helius RPC (paid) — public RPC is unreliable for token creation
+    rpc_url = os.environ.get("HELIUS_RPC_URL", "https://api.mainnet-beta.solana.com")
+    print(f"RPC: {rpc_url[:50]}...")
+
+    # Convert SOL to approximate token amount for the dev buy
+    # New pump.fun bonding curve initial reserves:
+    #   virtual_token_reserves = 1,073,000,000,000,000
+    #   virtual_sol_reserves   = 30,000,000,000 (30 SOL in lamports)
+    # tokens_out ≈ vtr * sol_lamports / (vsr + sol_lamports)
+    sol_lamports = int(dev_buy_sol * 1e9)
+    approx_tokens = int(1_073_000_000_000_000 * sol_lamports / (30_000_000_000 + sol_lamports))
+    print(f"Approx tokens for {dev_buy_sol} SOL: {approx_tokens:,}")
+
     print(f"\nRequesting transaction from PumpPortal...")
-    resp = requests.post(PUMPPORTAL_TRADE, json={
-        "publicKey": str(keypair.pubkey()),
-        "action": "create",
-        "tokenMetadata": {
-            "name": TOKEN_NAME,
-            "symbol": TOKEN_TICKER,
-            "uri": metadata_uri
-        },
-        "mint": mint_address,
-        "denominatedInSol": "true",
-        "amount": dev_buy_sol,
-        "slippage": 10,
-        "priorityFee": 0.0005,
-        "pool": "pump"
-    })
+    resp = requests.post(
+        PUMPPORTAL_TRADE,
+        headers={"Content-Type": "application/json"},
+        data=json.dumps({
+            "publicKey": str(keypair.pubkey()),
+            "action": "create",
+            "tokenMetadata": {
+                "name": TOKEN_NAME,
+                "symbol": TOKEN_TICKER,
+                "uri": metadata_uri
+            },
+            "mint": str(mint_keypair.pubkey()),
+            "denominatedInSol": "false",
+            "amount": approx_tokens,
+            "slippage": 10,
+            "priorityFee": 0.0005,
+            "pool": "pump"
+        })
+    )
 
     if resp.status_code != 200:
         print(f"PumpPortal error: {resp.status_code} {resp.text[:200]}")
         sys.exit(1)
 
-    tx_bytes = resp.content
-    tx = VersionedTransaction.from_bytes(tx_bytes)
-    signed_tx = VersionedTransaction(tx.message, [keypair, mint_keypair])
-    tx_base64 = base64.b64encode(bytes(signed_tx)).decode("ascii")
+    # Sign with both keypairs — mint first, then signer (PumpPortal convention)
+    tx = VersionedTransaction(
+        VersionedTransaction.from_bytes(resp.content).message,
+        [mint_keypair, keypair]
+    )
 
-    print(f"Sending transaction to Solana...")
+    # Send via solders RPC — skip preflight for token creates
+    # Preflight simulation can fail even when the tx would succeed on-chain
+    commitment = CommitmentLevel.Confirmed
+    config = RpcSendTransactionConfig(
+        preflight_commitment=commitment,
+        skip_preflight=True
+    )
+    tx_payload = SendVersionedTransaction(tx, config)
+
+    print(f"Sending transaction to Solana (skipPreflight=True)...")
     send_resp = requests.post(
-        "https://api.mainnet-beta.solana.com",
-        json={
-            "jsonrpc": "2.0", "id": 1,
-            "method": "sendTransaction",
-            "params": [
-                tx_base64,
-                {"encoding": "base64", "skipPreflight": False, "preflightCommitment": "confirmed"}
-            ]
-        },
-        headers={"Content-Type": "application/json"}
+        url=rpc_url,
+        headers={"Content-Type": "application/json"},
+        data=tx_payload.to_json()
     )
 
     result = send_resp.json()
