@@ -124,87 +124,84 @@ async function main() {
       const bps = Number((profit * 10000n) / borrow);
       console.log('  Profit: ' + profit + ' (' + bps + ' bps), fee: ' + fee);
 
-      if (bps >= 1) {
-        console.log('  >>> PROFITABLE! Building flash loan tx...');
+      // Force execute regardless of profitability — atomic flash loan reverts if unprofitable
+      console.log('  Building flash loan tx (force execute, bps=' + bps + ')...');
 
-        const [swapIx1, swapIx2] = await Promise.all([
-          getSwapIx(q1, keypair.publicKey, true, false),
-          getSwapIx(q2, keypair.publicKey, true, true),
-        ]);
+      const [swapIx1, swapIx2] = await Promise.all([
+        getSwapIx(q1, keypair.publicKey, true, false),
+        getSwapIx(q2, keypair.publicKey, true, true),
+      ]);
 
-        const usdcAta = getAssociatedTokenAddressSync(USDC_MINT_PK, keypair.publicKey, false, TOKEN_PROGRAM_ID);
+      const usdcAta = getAssociatedTokenAddressSync(USDC_MINT_PK, keypair.publicKey, false, TOKEN_PROGRAM_ID);
 
-        const instructions = [
-          ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
-          ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 25000 }),
-          createAssociatedTokenAccountIdempotentInstruction(keypair.publicKey, usdcAta, keypair.publicKey, USDC_MINT_PK, TOKEN_PROGRAM_ID),
-          buildBorrowIx(keypair.publicKey, usdcAta, borrow),
-          ...swapIx1.setupInstructions,
-          swapIx1.swapInstruction,
-          ...(swapIx1.cleanupInstruction ? [swapIx1.cleanupInstruction] : []),
-          ...(swapIx2.tokenLedgerInstruction ? [swapIx2.tokenLedgerInstruction] : []),
-          ...swapIx2.setupInstructions,
-          swapIx2.swapInstruction,
-          ...(swapIx2.cleanupInstruction ? [swapIx2.cleanupInstruction] : []),
-          buildRepayIx(keypair.publicKey, usdcAta),
-          SystemProgram.transfer({ fromPubkey: keypair.publicKey, toPubkey: JITO_TIP_ACCT, lamports: 10000 }),
-        ];
+      const instructions = [
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 25000 }),
+        createAssociatedTokenAccountIdempotentInstruction(keypair.publicKey, usdcAta, keypair.publicKey, USDC_MINT_PK, TOKEN_PROGRAM_ID),
+        buildBorrowIx(keypair.publicKey, usdcAta, borrow),
+        ...swapIx1.setupInstructions,
+        swapIx1.swapInstruction,
+        ...(swapIx1.cleanupInstruction ? [swapIx1.cleanupInstruction] : []),
+        ...(swapIx2.tokenLedgerInstruction ? [swapIx2.tokenLedgerInstruction] : []),
+        ...swapIx2.setupInstructions,
+        swapIx2.swapInstruction,
+        ...(swapIx2.cleanupInstruction ? [swapIx2.cleanupInstruction] : []),
+        buildRepayIx(keypair.publicKey, usdcAta),
+        SystemProgram.transfer({ fromPubkey: keypair.publicKey, toPubkey: JITO_TIP_ACCT, lamports: 10000 }),
+      ];
 
-        // Load ALTs
-        const altAddrs = [...new Set([...swapIx1.addressLookupTableAddresses, ...swapIx2.addressLookupTableAddresses])];
-        const tables = [];
-        for (const addr of altAddrs) {
-          const r = await connection.getAddressLookupTable(new PublicKey(addr));
-          if (r.value) tables.push(r.value);
-        }
+      // Load ALTs
+      const altAddrs = [...new Set([...swapIx1.addressLookupTableAddresses, ...swapIx2.addressLookupTableAddresses])];
+      const tables = [];
+      for (const addr of altAddrs) {
+        const r = await connection.getAddressLookupTable(new PublicKey(addr));
+        if (r.value) tables.push(r.value);
+      }
 
-        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
-        const msg = new TransactionMessage({ payerKey: keypair.publicKey, recentBlockhash: blockhash, instructions }).compileToV0Message(tables);
-        const tx = new VersionedTransaction(msg);
-        tx.sign([keypair]);
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+      const msg = new TransactionMessage({ payerKey: keypair.publicKey, recentBlockhash: blockhash, instructions }).compileToV0Message(tables);
+      const tx = new VersionedTransaction(msg);
+      tx.sign([keypair]);
 
-        const txBytes = tx.serialize().length;
-        console.log('  TX: ' + txBytes + ' bytes, ' + instructions.length + ' ix');
+      const txBytes = tx.serialize().length;
+      console.log('  TX: ' + txBytes + ' bytes, ' + instructions.length + ' ix');
 
-        if (txBytes > 1232) { console.log('  TX too large — skipping'); continue; }
+      if (txBytes > 1232) { console.log('  TX too large — skipping'); continue; }
 
-        console.log('  Simulating...');
-        const sim = await connection.simulateTransaction(tx, { commitment: 'confirmed' });
-        if (sim.value.err) {
-          console.log('  Simulation FAILED:', JSON.stringify(sim.value.err));
-          for (const log of (sim.value.logs || []).slice(-5)) console.log('    ' + log);
-          continue;
-        }
-        console.log('  Simulation PASSED! (' + sim.value.unitsConsumed + ' CU)');
+      console.log('  Simulating...');
+      const sim = await connection.simulateTransaction(tx, { commitment: 'confirmed' });
+      if (sim.value.err) {
+        console.log('  Simulation FAILED:', JSON.stringify(sim.value.err));
+        for (const log of (sim.value.logs || []).slice(-10)) console.log('    ' + log);
+        continue;
+      }
+      console.log('  Simulation PASSED! (' + sim.value.unitsConsumed + ' CU)');
 
-        console.log('  Sending via Jito...');
-        let sig;
-        try {
-          const jitoRes = await fetch('https://mainnet.block-engine.jito.wtf/api/v1/transactions', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'sendTransaction',
-              params: [Buffer.from(tx.serialize()).toString('base64'), { encoding: 'base64' }] }),
-          });
-          const jitoData = await jitoRes.json();
-          sig = jitoData.result;
-          if (sig) { console.log('  Jito sig:', sig); }
-          else throw new Error(jitoData.error?.message || 'No sig');
-        } catch (e) {
-          console.log('  Jito failed (' + e.message + '), sending via RPC...');
-          sig = await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 2 });
-        }
+      console.log('  Sending via Jito...');
+      let sig;
+      try {
+        const jitoRes = await fetch('https://mainnet.block-engine.jito.wtf/api/v1/transactions', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'sendTransaction',
+            params: [Buffer.from(tx.serialize()).toString('base64'), { encoding: 'base64' }] }),
+        });
+        const jitoData = await jitoRes.json();
+        sig = jitoData.result;
+        if (sig) { console.log('  Jito sig:', sig); }
+        else throw new Error(jitoData.error?.message || 'No sig');
+      } catch (e) {
+        console.log('  Jito failed (' + e.message + '), sending via RPC...');
+        sig = await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 2 });
+      }
 
-        console.log('  TX:', sig);
-        console.log('  https://solscan.io/tx/' + sig);
+      console.log('  TX:', sig);
+      console.log('  https://solscan.io/tx/' + sig);
 
-        const conf = await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
-        if (conf.value.err) {
-          console.log('  FAILED on-chain:', JSON.stringify(conf.value.err));
-        } else {
-          console.log('  >>> ARB SUCCESS! ' + pair + ' +' + bps + 'bps <<<');
-        }
+      const conf = await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
+      if (conf.value.err) {
+        console.log('  REVERTED on-chain (expected if not profitable):', JSON.stringify(conf.value.err));
       } else {
-        console.log('  Not profitable (' + bps + ' bps)');
+        console.log('  >>> TX LANDED! ' + pair + ' ' + bps + 'bps <<<');
       }
     } catch (e) {
       console.log('  Error: ' + e.message);
