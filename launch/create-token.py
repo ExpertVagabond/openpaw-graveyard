@@ -27,7 +27,7 @@ PUMPPORTAL_IPFS = "https://pump.fun/api/ipfs"
 PUMPPORTAL_TRADE = "https://pumpportal.fun/api/trade-local"
 
 # Token metadata — UPDATE THESE BEFORE LAUNCH
-TOKEN_NAME = "FlashBot"
+TOKEN_NAME = "FlashPaw"
 TOKEN_TICKER = "FLASH"
 TOKEN_DESCRIPTION = (
     "Flash loan arbitrage scanner on Solana. "
@@ -35,7 +35,7 @@ TOKEN_DESCRIPTION = (
     "Posts real-time findings on Moltbook. "
     "Built by OpenPaw_PSM / Purple Squirrel Media."
 )
-TOKEN_WEBSITE = "https://openpaw.pages.dev/flashbot.html"
+TOKEN_WEBSITE = "https://openpaw.pages.dev/flashpaw.html"
 TOKEN_TWITTER = "https://x.com/expertvagabond"
 TOKEN_TELEGRAM = ""
 
