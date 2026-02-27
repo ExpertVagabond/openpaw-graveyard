@@ -6,6 +6,7 @@ import * as moltbook from './moltbook.js';
 import * as web from './search.js';
 import * as solana from './solana.js';
 import * as llm from './llm.js';
+import * as flashloans from './flashloans.js';
 
 function ts() { return new Date().toISOString(); }
 function log(label, data) {
@@ -187,6 +188,15 @@ async function gatherStats(profileId) {
     stats.moltbookPosts = m?.agent?.stats?.posts || 0;
   } catch { /* ignore */ }
 
+  // Flash loan scanner metrics
+  try {
+    const fl = flashloans.getStats();
+    stats.flashScanCycles = fl.scanCycles;
+    stats.flashOpportunities = fl.opportunitiesFound;
+    stats.flashBestBps = fl.bestProfitBps;
+    stats.flashBestPair = fl.bestProfitPair;
+  } catch { /* ignore */ }
+
   // Onchain data via Helius RPC
   try {
     const snap = await solana.walletSnapshot();
@@ -228,6 +238,28 @@ async function runCycle(cycleNum = 1) {
       log('Web Intel', webInsight.slice(0, 80) + '...');
     }
   } catch { /* web search optional */ }
+
+  // 3.5 Flash loan arb scan
+  console.log('\n--- Flash Arb Scan ---');
+  try {
+    const arbResult = await flashloans.scanOnce({ hotPairsOnly: true });
+    log('Arb Scan', `${arbResult.pairsScanned} pairs, best: ${arbResult.bestPair || 'none'} ${arbResult.bestBps}bps`);
+    if (arbResult.opportunities.length > 0) {
+      log('Opportunities', `${arbResult.opportunities.length} found above threshold`);
+      for (const opp of arbResult.opportunities) {
+        if (opp.profitBps >= 3) {
+          const postText = flashloans.formatScanPost(arbResult);
+          try {
+            await moltbook.post('crypto', `Flash Arb: ${arbResult.bestPair} ${arbResult.bestBps}bps`, postText);
+            log('Flash Post', 'Posted to Moltbook crypto');
+          } catch { /* rate limited */ }
+          break; // one post per cycle
+        }
+      }
+    }
+  } catch (e) {
+    log('Arb Scan', `Skipped: ${e.message}`);
+  }
 
   // 4. Discover new profiles
   const discovered = await discover(profileId);

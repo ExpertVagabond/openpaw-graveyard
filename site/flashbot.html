@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlashBot | Flash Loan Arb Scanner on Solana</title>
+<meta name="description" content="FlashBot — Autonomous flash loan arbitrage scanner on Solana. Scans Jupiter + Raydium for cross-DEX opportunities. Posts real-time findings on Moltbook.">
+<meta property="og:title" content="FlashBot — Flash Loan Arb Scanner">
+<meta property="og:description" content="Autonomous flash loan arb scanner on Solana. Real-time cross-DEX opportunity detection.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;600;700;900&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#08080f;--bg2:#0d0d18;--bg3:#12121f;--accent:#22d3ee;--accent-dim:#22d3ee33;--accent-glow:#22d3ee66;--purple:#7C3AED;--purple-dim:#7C3AED33;--text:#e0e0e8;--text-dim:#8888aa;--border:#1a1a2e;--white:#fff}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;overflow-x:hidden;min-height:100vh}
+
+.container{max-width:900px;margin:0 auto;padding:0 20px}
+
+nav{position:fixed;top:0;left:0;right:0;background:rgba(8,8,15,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:100;padding:12px 0}
+nav .container{display:flex;justify-content:space-between;align-items:center}
+nav .logo{font-family:'Space Mono',monospace;font-weight:700;font-size:1rem;color:var(--accent)}
+nav .links{display:flex;gap:8px}
+nav .links a{font-size:.8rem;font-weight:600;text-decoration:none;padding:8px 16px;border-radius:6px;border:1px solid var(--border);color:var(--text-dim);transition:all .2s}
+nav .links a:hover{border-color:var(--accent);color:var(--accent)}
+nav .links a.buy{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
+nav .links a.buy:hover{box-shadow:0 0 20px var(--accent-glow)}
+
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:100px 20px 60px;position:relative}
+.hero::before{content:'';position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);width:500px;height:500px;background:radial-gradient(circle,var(--accent-dim) 0%,transparent 60%);filter:blur(80px);pointer-events:none}
+.hero::after{content:'';position:absolute;top:55%;left:30%;width:400px;height:400px;background:radial-gradient(circle,var(--purple-dim) 0%,transparent 60%);filter:blur(100px);pointer-events:none}
+
+.hero-logo{width:160px;height:160px;border-radius:50%;border:3px solid var(--accent-dim);box-shadow:0 0 40px var(--accent-dim);margin-bottom:24px;animation:float 6s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 20px var(--accent-dim)}50%{box-shadow:0 0 60px var(--accent-glow)}}
+
+.badge{display:inline-block;font-size:.75rem;font-weight:700;padding:6px 14px;border-radius:20px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-dim);margin-bottom:20px;letter-spacing:.1em;text-transform:uppercase}
+
+h1{font-family:'Space Mono',monospace;font-weight:700;font-size:clamp(2.5rem,8vw,4.5rem);color:var(--white);line-height:1.1}
+h1 span{background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.tagline{font-size:clamp(.9rem,2vw,1.1rem);color:var(--text-dim);margin-top:12px;letter-spacing:.08em;text-transform:uppercase}
+.sub{font-size:1rem;color:var(--text-dim);margin-top:20px;max-width:550px;line-height:1.7}
+
+.price-hero{margin-top:40px;text-align:center}
+.price-big{font-family:'Space Mono',monospace;font-size:clamp(2rem,6vw,3.5rem);font-weight:700;color:var(--white)}
+.price-meta{display:flex;gap:24px;justify-content:center;margin-top:8px;flex-wrap:wrap}
+.price-meta span{font-size:.85rem;color:var(--text-dim);font-family:'Space Mono',monospace}
+.price-meta .up{color:var(--accent)}
+
+.cta-row{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap;justify-content:center}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:8px;font-weight:700;font-size:.95rem;text-decoration:none;transition:all .2s;cursor:pointer;border:none;font-family:inherit}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--purple));color:#000;box-shadow:0 0 20px var(--accent-dim)}
+.btn-primary:hover{box-shadow:0 0 40px var(--accent-glow);transform:translateY(-2px)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--text-dim)}
+
+.mint-banner{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 24px;margin:40px auto 0;max-width:600px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s}
+.mint-banner:hover{border-color:var(--accent)}
+.mint-banner .label{font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;flex-shrink:0}
+.mint-banner .addr{font-family:'Space Mono',monospace;font-size:.8rem;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mint-banner .copy{font-size:.7rem;color:var(--accent);font-weight:700;flex-shrink:0}
+
+section{padding:80px 0}
+section h2{font-family:'Space Mono',monospace;font-size:1.6rem;color:var(--white);margin-bottom:40px;text-align:center}
+
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:60px}
+@media(max-width:768px){.stats-grid{grid-template-columns:1fr 1fr}}
+.stat-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;transition:all .3s}
+.stat-box:hover{border-color:var(--accent-dim)}
+.stat-val{font-family:'Space Mono',monospace;font-size:1.4rem;font-weight:700;color:var(--white)}
+.stat-label{font-size:.75rem;color:var(--text-dim);margin-top:6px;text-transform:uppercase;letter-spacing:.05em}
+
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:768px){.features{grid-template-columns:1fr}}
+.feature{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;transition:all .3s}
+.feature:hover{border-color:var(--accent-dim);transform:translateY(-4px)}
+.feature .icon{font-size:1.6rem;margin-bottom:12px}
+.feature h3{font-size:1rem;font-weight:700;color:var(--white);margin-bottom:8px}
+.feature p{font-size:.85rem;color:var(--text-dim);line-height:1.6}
+
+.terminal{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:32px;margin:40px 0;font-family:'Space Mono',monospace;font-size:.85rem;line-height:1.8;overflow-x:auto}
+.terminal .prompt{color:var(--accent)}
+.terminal .output{color:var(--text-dim)}
+.terminal .highlight{color:var(--white)}
+.terminal .profit{color:#00ff88}
+
+footer{border-top:1px solid var(--border);padding:40px 0;text-align:center}
+footer p{font-size:.8rem;color:var(--text-dim)}
+footer a{color:var(--accent);text-decoration:none}
+footer a:hover{text-decoration:underline}
+footer .links-row{display:flex;gap:20px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <div class="logo">$FLASH</div>
+    <div class="links">
+      <a href="https://moltbook.com/u/OpenPaw_PSM" target="_blank">Moltbook</a>
+      <a href="https://github.com/ExpertVagabond/openpaw-graveyard" target="_blank">GitHub</a>
+      <a href="#" id="buy-link" class="buy" target="_blank">Buy $FLASH</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <img src="images/flashbot-logo.png" alt="FlashBot" class="hero-logo">
+  <div class="badge">Flash Loan Arb Scanner</div>
+  <h1><span>FlashBot</span></h1>
+  <div class="tagline">Cross-DEX Arbitrage Intelligence on Solana</div>
+  <p class="sub">Autonomous flash loan arbitrage scanner. Scans Jupiter + Raydium for cross-DEX spread opportunities and posts real-time findings on Moltbook.</p>
+
+  <div class="price-hero">
+    <div class="price-big" id="price">$0.0000</div>
+    <div class="price-meta">
+      <span>MCap: <span id="mcap">--</span></span>
+      <span>Volume: <span id="volume">--</span></span>
+    </div>
+  </div>
+
+  <div class="cta-row">
+    <a href="#" id="pump-link" class="btn btn-primary" target="_blank">Buy on Pump.fun</a>
+    <a href="#how" class="btn btn-outline">How It Works</a>
+  </div>
+
+  <div class="mint-banner" onclick="copyMint()">
+    <span class="label">Mint</span>
+    <span class="addr" id="mint-addr">TBD — Launching soon</span>
+    <span class="copy" id="copy-label">COPY</span>
+  </div>
+</div>
+
+<section>
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-val">20</div><div class="stat-label">Pairs Scanned</div></div>
+      <div class="stat-box"><div class="stat-val">2</div><div class="stat-label">DEX Sources</div></div>
+      <div class="stat-box"><div class="stat-val">&lt;30s</div><div class="stat-label">Scan Cycle</div></div>
+      <div class="stat-box"><div class="stat-val">24/7</div><div class="stat-label">Autonomous</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="container">
+    <h2>How It Works</h2>
+    <div class="features">
+      <div class="feature">
+        <div class="icon">&#9889;</div>
+        <h3>Flash Loan Scanning</h3>
+        <p>Borrows USDC, swaps through Jupiter + Raydium direct routes, checks if the return beats the borrow + fees. All math, no execution risk.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">&#128202;</div>
+        <h3>Raydium-First Quotes</h3>
+        <p>Hits Raydium API first (generous rate limits), falls back to Jupiter. Token bucket rate limiter prevents 429 errors. 5s quote cache.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">&#128225;</div>
+        <h3>Moltbook Integration</h3>
+        <p>Posts scan results to Moltbook crypto submolt when profitable spreads are detected. Part of the OpenPaw autonomous agent ecosystem.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">&#128176;</div>
+        <h3>Per-Pair Borrow Sizing</h3>
+        <p>Deep liquidity pairs get $200 borrows, meme coins get $20. Minimizes price impact while maximizing opportunity detection.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">&#128274;</div>
+        <h3>Read-Only Scanning</h3>
+        <p>Phase 1 is scan-only — anonymous API calls, no wallet needed, no funds at risk. Detects opportunities without executing trades.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">&#128640;</div>
+        <h3>OpenPaw Agent</h3>
+        <p>Runs as part of OpenPaw's 7-step autonomous cycle. Each cycle: identity, stats, research, flash scan, discover, engage, publish.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Live Scanner Output</h2>
+    <div class="terminal">
+      <div><span class="prompt">$</span> <span class="highlight">node src/index.js flashscan</span></div>
+      <div class="output">Running flash loan arb scan...</div>
+      <div class="output">&nbsp;</div>
+      <div class="output">=== Flash Loan Arb Scan ===</div>
+      <div class="output">Scanned 20 pairs in 24.3s</div>
+      <div class="output">Best spread: <span class="highlight">BONK/USDC</span> at <span class="profit">12 bps</span></div>
+      <div class="output">&nbsp;</div>
+      <div class="output">Opportunities (>= 5 bps):</div>
+      <div class="output">&nbsp;&nbsp;<span class="highlight">BONK/USDC</span>: <span class="profit">12 bps</span>, profit ~$0.12 (borrow $20)</div>
+      <div class="output">&nbsp;&nbsp;<span class="highlight">WIF/USDC</span>: <span class="profit">7 bps</span>, profit ~$0.035 (borrow $50)</div>
+      <div class="output">&nbsp;</div>
+      <div class="output">[MOLTBOOK] Posted scan results</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Architecture</h2>
+    <div class="terminal">
+      <div class="output">OpenPaw Agent + FlashBot Scanner</div>
+      <div class="output">================================</div>
+      <div class="output">&nbsp;</div>
+      <div class="output">  Raydium API ──┐</div>
+      <div class="output">                ├── Quote Client ── Profit Calc ── Scanner</div>
+      <div class="output">  Jupiter API ──┘       |                              |</div>
+      <div class="output">                   Rate Limiter              Moltbook Post</div>
+      <div class="output">                   (token bucket)            (crypto submolt)</div>
+      <div class="output">&nbsp;</div>
+      <div class="output">  Stack: Plain JS ESM | Node 22 | fetch() + BigInt</div>
+      <div class="output">  Zero npm dependencies for scanning layer</div>
+      <div class="output">  20 pairs | Direct routes only | 5s quote cache</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>Built by <a href="https://openpaw.pages.dev">OpenPaw_PSM</a> / <a href="https://purplesquirrelmedia.io">Purple Squirrel Media</a></p>
+    <div class="links-row">
+      <a href="https://github.com/ExpertVagabond/openpaw-graveyard">GitHub</a>
+      <a href="https://moltbook.com/u/OpenPaw_PSM">Moltbook</a>
+      <a href="https://solscan.io/account/39NsBBAySg8kjeWEBpdiYt1oWtbPCv3A6YFd86ZGyeyv">Solscan</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Token mint address — update after pump.fun launch
+const MINT = '';
+
+// Copy mint address
+function copyMint() {
+  if (!MINT) return;
+  navigator.clipboard.writeText(MINT);
+  document.getElementById('copy-label').textContent = 'COPIED!';
+  setTimeout(() => document.getElementById('copy-label').textContent = 'COPY', 2000);
+}
+
+// Update links with mint address
+if (MINT) {
+  document.getElementById('mint-addr').textContent = MINT;
+  document.getElementById('pump-link').href = `https://pump.fun/coin/${MINT}`;
+  document.getElementById('buy-link').href = `https://pump.fun/coin/${MINT}`;
+}
+
+// Fetch live price from DexScreener
+async function fetchPrice() {
+  if (!MINT) return;
+  try {
+    const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${MINT}`);
+    const data = await res.json();
+    const pair = data.pairs?.[0];
+    if (pair) {
+      const price = parseFloat(pair.priceUsd || 0);
+      document.getElementById('price').textContent = price < 0.01
+        ? `$${price.toFixed(6)}`
+        : `$${price.toFixed(4)}`;
+      const mcap = pair.marketCap || pair.fdv || 0;
+      document.getElementById('mcap').textContent = mcap > 1000
+        ? `$${(mcap/1000).toFixed(1)}K`
+        : `$${mcap}`;
+      const vol = pair.volume?.h24 || 0;
+      document.getElementById('volume').textContent = vol > 1000
+        ? `$${(vol/1000).toFixed(1)}K`
+        : `$${vol}`;
+    }
+  } catch {}
+}
+
+fetchPrice();
+if (MINT) setInterval(fetchPrice, 30000);
+</script>
+</body>
+</html>

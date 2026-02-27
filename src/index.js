@@ -11,6 +11,7 @@ import * as web from './search.js';
 import * as outreach from './outreach.js';
 import * as solana from './solana.js';
 import * as llm from './llm.js';
+import * as flashloans from './flashloans.js';
 
 const [,, command, ...args] = process.argv;
 
@@ -441,6 +442,37 @@ async function cmdSlot() {
   console.log(`Current Solana slot: ${slot.toLocaleString()}`);
 }
 
+// ─── Flash Loan Commands ─────────────────────────────────
+
+async function cmdFlashScan() {
+  console.log('Running flash loan arb scan...\n');
+  const results = await flashloans.scanOnce();
+  console.log(flashloans.formatScanReport(results));
+
+  // Post to Moltbook if notable spread
+  if (results.bestBps >= 3) {
+    const postText = flashloans.formatScanPost(results);
+    try {
+      await moltbook.post('crypto', `Flash Arb: ${results.bestPair} ${results.bestBps}bps`, postText);
+      console.log('\n  [MOLTBOOK] Posted scan results');
+    } catch (e) {
+      console.log(`\n  [MOLTBOOK] Post failed: ${e.message}`);
+    }
+  }
+}
+
+async function cmdFlashRun() {
+  const intervalSec = parseInt(args[0]) || 30;
+  process.on('SIGINT', () => { flashloans.stopDaemon(); });
+  process.on('SIGTERM', () => { flashloans.stopDaemon(); });
+  await flashloans.daemon(intervalSec);
+}
+
+async function cmdFlashStats() {
+  const stats = flashloans.getStats();
+  console.log(JSON.stringify(stats, null, 2));
+}
+
 // ─── Router ──────────────────────────────────────────────
 
 const commands = {
@@ -472,6 +504,9 @@ const commands = {
   projects: cmdProjects,
   llm: cmdLLM,
   models: cmdModels,
+  flashscan: cmdFlashScan,
+  flashrun: cmdFlashRun,
+  flashstats: cmdFlashStats,
 };
 
 async function main() {
@@ -507,6 +542,9 @@ Commands:
   models     List available Ollama models
   server     Start HTTP server (API + static site)
   heartbeat  Run autonomous heartbeat cycle
+  flashscan  Run one flash loan arb scan cycle
+  flashrun   Continuous flash loan scanner daemon (flashrun [interval_sec])
+  flashstats Show flash loan scanning metrics
   demo       Full demo of all capabilities
   help       Show this help
 

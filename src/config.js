@@ -15,6 +15,12 @@ const MOLTBOOK_API_URL = 'https://www.moltbook.com/api/v1';
 // Solana RPC (Helius mainnet)
 const HELIUS_RPC_URL = process.env.HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com';
 
+// Flash loan arb scanner
+const JUPITER_API_KEY = process.env.JUPITER_API_KEY || '';
+const FLASH_MIN_PROFIT_BPS = parseInt(process.env.FLASH_MIN_PROFIT_BPS || '5');
+const FLASH_SCAN_INTERVAL = parseInt(process.env.FLASH_SCAN_INTERVAL || '30');
+const FLASH_POST_THRESHOLD_BPS = parseInt(process.env.FLASH_POST_THRESHOLD_BPS || '3');
+
 // OpenPaw's Solana wallet (Bankr-provisioned)
 const SOLANA_WALLET = '7zTXH4aoGjFUNY3XaLQb3Bww1adKeCWEpcpN1sv2w8Gt';
 
@@ -70,4 +76,8 @@ export {
   SOLANA_WALLET,
   AGENT,
   PSM_PROJECTS,
+  JUPITER_API_KEY,
+  FLASH_MIN_PROFIT_BPS,
+  FLASH_SCAN_INTERVAL,
+  FLASH_POST_THRESHOLD_BPS,
 };
