@@ -541,32 +541,16 @@ async function executeArbitrage(opportunity) {
 
   console.log(`  [EXEC] Executing ${opportunity.pair} — ${opportunity.profitBps}bps expected profit`);
 
-  // Re-quote fresh through Jupiter only (cached Raydium quotes can diverge)
-  const quoteLeg1 = await getJupiterQuote(
-    opportunity.tokenA, opportunity.tokenB,
-    opportunity.borrowAmount.toString(), SLIPPAGE_BPS, true
-  );
+  // Use scan quotes directly — no re-quote. Flash loan is atomic so if
+  // it's not profitable on-chain the tx just reverts (only lose tx fee).
+  const quoteLeg1 = opportunity.quoteLeg1;
+  const quoteLeg2 = opportunity.quoteLeg2;
+  if (!quoteLeg1 || !quoteLeg2) {
+    console.log('  [EXEC] No cached quotes on opportunity — skipping');
+    return null;
+  }
   const leg1Out = BigInt(quoteLeg1.outAmount);
-  if (leg1Out === 0n) {
-    console.log('  [EXEC] No route for leg 1 — skipping');
-    return null;
-  }
-
-  const quoteLeg2 = await getJupiterQuote(
-    opportunity.tokenB, opportunity.tokenA,
-    leg1Out.toString(), SLIPPAGE_BPS, true
-  );
-  const freshLeg2Out = BigInt(quoteLeg2.outAmount);
-
-  // Re-check profitability with fresh quotes
-  const freshProfit = freshLeg2Out - opportunity.borrowAmount - opportunity.flashLoanFee - opportunity.solCosts;
-  const freshBps = Number((freshProfit * 10000n) / opportunity.borrowAmount);
-  console.log(`  [EXEC] Fresh Jupiter: leg1=${leg1Out} leg2=${freshLeg2Out} profit=${freshBps}bps`);
-  if (freshBps < 1) {
-    console.log(`  [EXEC] Not profitable after re-quote (${freshBps}bps) — skipping`);
-    metrics.executionSkipped = (metrics.executionSkipped || 0) + 1;
-    return null;
-  }
+  console.log(`  [EXEC] Using scan quotes: leg1=${leg1Out} leg2=${quoteLeg2.outAmount} profit=${opportunity.profitBps}bps`);
 
   // Check if SOL is involved (disable wrapAndUnwrapSol to avoid SyncNative conflicts)
   const involvesSol = opportunity.tokenA === SOL_MINT || opportunity.tokenB === SOL_MINT;
