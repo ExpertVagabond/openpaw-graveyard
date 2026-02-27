@@ -578,12 +578,14 @@ async function executeArbitrage(opportunity) {
     buildBorrowIx(keypair.publicKey, borrowerUsdcAta, opportunity.borrowAmount),
 
     // Leg 1: tokenA → tokenB
+    // Token ledger goes AFTER setup (ATA creation) but BEFORE swap so it
+    // snapshots the intermediate token balance. Leg 2 uses the delta.
     ...swapIx1.setupInstructions,
+    ...(swapIx2.tokenLedgerInstruction ? [swapIx2.tokenLedgerInstruction] : []),
     swapIx1.swapInstruction,
     ...(swapIx1.cleanupInstruction ? [swapIx1.cleanupInstruction] : []),
 
-    // Leg 2: tokenB → tokenA (with tokenLedger for actual leg 1 output)
-    ...(swapIx2.tokenLedgerInstruction ? [swapIx2.tokenLedgerInstruction] : []),
+    // Leg 2: tokenB → tokenA (uses tokenLedger delta as input)
     ...swapIx2.setupInstructions,
     swapIx2.swapInstruction,
     ...(swapIx2.cleanupInstruction ? [swapIx2.cleanupInstruction] : []),

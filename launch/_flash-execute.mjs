@@ -18,7 +18,7 @@ import 'dotenv/config';
 const JUPITER_API_BASE = 'https://api.jup.ag/swap/v1';
 const JUPITER_API_KEY = process.env.JUPITER_API_KEY || '';
 const HELIUS_RPC = process.env.HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com';
-const SLIPPAGE_BPS = 50;
+const SLIPPAGE_BPS = 500; // High slippage for force-execute testing
 
 const FLASH_LOAN_PROGRAM = new PublicKey('2chVPk6DV21qWuyUA2eHAzATdFSHM7ykv1fVX7Gv6nor');
 const USDC_MINT_PK = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
@@ -27,8 +27,7 @@ const REPAY_DISC = Buffer.from([119, 239, 18, 45, 194, 107, 31, 238]);
 const JITO_TIP_ACCT = new PublicKey('96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5');
 
 const PAIRS = [
-  { pair: 'BONK/USDC', tokenA: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', tokenB: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263', borrow: 20_000_000n },
-  { pair: 'POPCAT/USDC', tokenA: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', tokenB: '7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr', borrow: 20_000_000n },
+  { pair: 'USDT/USDC', tokenA: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', tokenB: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', borrow: 20_000_000n },
 ];
 
 const connection = new Connection(HELIUS_RPC, 'confirmed');
@@ -106,7 +105,7 @@ async function main() {
   console.log('Wallet:', keypair.publicKey.toBase58().slice(0, 12) + '...');
   const bal = await connection.getBalance(keypair.publicKey);
   console.log('Balance:', (bal / 1e9).toFixed(4), 'SOL');
-  console.log('\n=== Focused Flash Scan: BONK + POPCAT ===\n');
+  console.log('\n=== Flash Loan Execute: USDT/USDC ===\n');
 
   for (const { pair, tokenA, tokenB, borrow } of PAIRS) {
     console.log('--- ' + pair + ' (borrow $' + Number(borrow) / 1e6 + ') ---');
@@ -127,22 +126,26 @@ async function main() {
       // Force execute regardless of profitability — atomic flash loan reverts if unprofitable
       console.log('  Building flash loan tx (force execute, bps=' + bps + ')...');
 
+      // No SOL wrapping needed for stablecoin pairs
+      const involvesSol = tokenB === 'So11111111111111111111111111111111111111112';
       const [swapIx1, swapIx2] = await Promise.all([
-        getSwapIx(q1, keypair.publicKey, true, false),
-        getSwapIx(q2, keypair.publicKey, true, true),
+        getSwapIx(q1, keypair.publicKey, involvesSol ? false : true, false),
+        getSwapIx(q2, keypair.publicKey, involvesSol ? false : true, true),
       ]);
 
       const usdcAta = getAssociatedTokenAddressSync(USDC_MINT_PK, keypair.publicKey, false, TOKEN_PROGRAM_ID);
 
+      // Token ledger must go AFTER setup (ATA creation) but BEFORE leg 1 swap.
+      // It snapshots the intermediate token balance, then leg 2 uses the delta.
       const instructions = [
         ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
         ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 25000 }),
         createAssociatedTokenAccountIdempotentInstruction(keypair.publicKey, usdcAta, keypair.publicKey, USDC_MINT_PK, TOKEN_PROGRAM_ID),
         buildBorrowIx(keypair.publicKey, usdcAta, borrow),
         ...swapIx1.setupInstructions,
+        ...(swapIx2.tokenLedgerInstruction ? [swapIx2.tokenLedgerInstruction] : []),
         swapIx1.swapInstruction,
         ...(swapIx1.cleanupInstruction ? [swapIx1.cleanupInstruction] : []),
-        ...(swapIx2.tokenLedgerInstruction ? [swapIx2.tokenLedgerInstruction] : []),
         ...swapIx2.setupInstructions,
         swapIx2.swapInstruction,
         ...(swapIx2.cleanupInstruction ? [swapIx2.cleanupInstruction] : []),
