@@ -17,9 +17,10 @@ const PROGRAM = new PublicKey('2chVPk6DV21qWuyUA2eHAzATdFSHM7ykv1fVX7Gv6nor');
 const USDC = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 const SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112');
 
-const WALLET_B_PATH = '/Volumes/Virtual Server/projects/solana-flash-loan/bot/wallet.json';
-const kp = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(fs.readFileSync(WALLET_B_PATH))));
-console.log('Wallet B:', kp.publicKey.toBase58());
+// Use Wallet A (main) — has SOL. Any wallet can deposit, not just admin.
+const WALLET_A_PATH = process.env.HOME + '/.config/solana/id.json';
+const kp = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(fs.readFileSync(WALLET_A_PATH))));
+console.log('Wallet A:', kp.publicKey.toBase58());
 
 const bal = await conn.getBalance(kp.publicKey);
 console.log('SOL balance:', (bal / 1e9).toFixed(4));
